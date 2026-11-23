@@ -1,0 +1,152 @@
+
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VYORA Studio</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#080d18;color:white;font-family:Arial,sans-serif}
+header{padding:20px;background:#111b2e;text-align:center}
+header h1{color:#64e6cf;margin:0}
+nav{display:flex;gap:8px;padding:12px;overflow:auto}
+button{border:0;border-radius:10px;padding:12px;background:#263650;color:white;font-weight:bold}
+button.active,.primary{background:#11b99a;color:#071b19}
+main{padding:15px;max-width:850px;margin:auto}
+.panel{background:#111b2e;padding:16px;border-radius:15px;margin:12px 0}
+h2{color:#64e6cf}
+input,select{max-width:100%;padding:10px;border-radius:8px}
+.preview{width:100%;max-height:420px;object-fit:contain;background:#05080e;margin-top:12px}
+label{display:block;margin:14px 0 5px}
+.tools{display:flex;gap:8px;flex-wrap:wrap}
+input[type=range]{width:100%}
+video{width:100%;max-height:400px}
+.small{color:#aab8cc;font-size:13px}
+</style>
+</head>
+<body>
+<header>
+<h1>VYORA STUDIO</h1>
+<p>PHOTO • VIDEO • AI CREATION</p>
+</header>
+<nav>
+<button class="active" onclick="show('photo',this)">Photo Editor</button>
+<button onclick="show('video',this)">Video Editor</button>
+<button onclick="show('ai',this)">AI Enhance</button>
+<button onclick="show('premium',this)">Premium</button>
+</nav>
+<main>
+<section id="photo" class="panel">
+<h2>Photo Studio</h2>
+<input type="file" id="photoFile" accept="image/*">
+<img id="photoPreview" class="preview" hidden>
+<label>Brightness</label>
+<input type="range" id="brightness" min="0" max="200" value="100">
+<label>Contrast</label>
+<input type="range" id="contrast" min="0" max="200" value="100">
+<label>Saturation</label>
+<input type="range" id="saturation" min="0" max="200" value="100">
+<label>Photo Filter</label>
+<select id="filter">
+<option value="none">Original</option>
+<option value="grayscale(1)">Black & White</option>
+<option value="sepia(1)">Vintage</option>
+<option value="saturate(1.7)">Vivid</option>
+<option value="contrast(1.3) saturate(1.3)">Cinematic</option>
+<option value="hue-rotate(35deg)">Color Shift</option>
+</select>
+<label>Frame</label>
+<select id="frame">
+<option value="0">No Frame</option>
+<option value="8">Classic White</option>
+<option value="14">Premium Gold</option>
+<option value="20">Bold Border</option>
+</select>
+<div class="tools">
+<button onclick="rotatePhoto()">Rotate</button>
+<button onclick="resetPhoto()">Reset</button>
+<button class="primary" onclick="downloadPhoto()">Download HD Photo</button>
+</div>
+</section>
+
+<section id="video" class="panel" hidden>
+<h2>Video Studio</h2>
+<input type="file" id="videoFile" accept="video/*">
+<video id="videoPreview" controls hidden></video>
+<label>Add Music</label>
+<input type="file" id="musicFile" accept="audio/*">
+<audio id="musicPreview" controls></audio>
+<p class="small">यह शुरुआती वर्जन है। वीडियो में नया म्यूजिक मिक्स और HD Export आगे के चरण में जोड़ेंगे।</p>
+</section>
+
+<section id="ai" class="panel" hidden>
+<h2>AI Photo Enhancement</h2>
+<p>AI Quality Enhancement का अगला चरण यहाँ जोड़ा जाएगा।</p>
+<p class="small">वास्तविक AI Upscaling के लिए AI मॉडल और सर्वर कनेक्शन जरूरी होगा।</p>
+</section>
+
+<section id="premium" class="panel" hidden>
+<h2>VYORA Premium</h2>
+<p>Free और Premium सुविधाएँ आगे जोड़ी जाएँगी।</p>
+<p class="small">यह अभी केवल डेमो स्क्रीन है। कोई भुगतान चालू नहीं है।</p>
+</section>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+let originalImage=null,rotation=0;
+function show(id,btn){
+document.querySelectorAll('main section').forEach(s=>s.hidden=true);
+$(id).hidden=false;
+document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+btn.classList.add('active');
+}
+$('photoFile').onchange=e=>{
+const file=e.target.files[0];if(!file)return;
+const reader=new FileReader();
+reader.onload=ev=>{
+originalImage=new Image();
+originalImage.onload=()=>{$('photoPreview').src=ev.target.result;$('photoPreview').hidden=false;resetPhoto()};
+originalImage.src=ev.target.result;
+};
+reader.readAsDataURL(file);
+};
+function applyFilter(){
+$('photoPreview').style.filter=
+`brightness(${$('brightness').value}%) contrast(${$('contrast').value}%) saturate(${$('saturation').value}%) ${$('filter').value}`;
+$('photoPreview').style.border=$('frame').value+'px solid '+($('frame').value==14?'#d6ad54':'white');
+$('photoPreview').style.transform=`rotate(${rotation}deg)`;
+}
+['brightness','contrast','saturation','filter','frame'].forEach(id=>$(id).addEventListener('input',applyFilter));
+function resetPhoto(){
+rotation=0;
+['brightness','contrast','saturation'].forEach(id=>$(id).value=100);
+$('filter').value='none';$('frame').value=0;applyFilter();
+}
+function rotatePhoto(){rotation=(rotation+90)%360;applyFilter()}
+function downloadPhoto(){
+if(!originalImage)return alert('पहले फोटो चुनें');
+const canvas=document.createElement('canvas');
+const ctx=canvas.getContext('2d');
+const r=rotation*Math.PI/180;
+const w=originalImage.naturalWidth,h=originalImage.naturalHeight;
+canvas.width=rotation%180===0?w:h;
+canvas.height=rotation%180===0?h:w;
+ctx.save();ctx.translate(canvas.width/2,canvas.height/2);ctx.rotate(r);
+ctx.filter=`brightness(${$('brightness').value}%) contrast(${$('contrast').value}%) saturate(${$('saturation').value}%) ${$('filter').value}`;
+ctx.drawImage(originalImage,-w/2,-h/2,w,h);ctx.restore();
+const border=Number($('frame').value);
+if(border){ctx.filter='none';ctx.lineWidth=border*2;ctx.strokeStyle=border===14?'#d6ad54':'white';ctx.strokeRect(border,border,canvas.width-2*border,canvas.height-2*border)}
+const a=document.createElement('a');a.download='VYORA-HD.jpg';a.href=canvas.toDataURL('image/jpeg',0.95);a.click();
+}
+$('videoFile').onchange=e=>{
+const f=e.target.files[0];if(!f)return;
+$('videoPreview').src=URL.createObjectURL(f);$('videoPreview').hidden=false;
+};
+$('musicFile').onchange=e=>{
+const f=e.target.files[0];if(!f)return;
+$('musicPreview').src=URL.createObjectURL(f);
+};
+</script>
+</body>
+</html>
