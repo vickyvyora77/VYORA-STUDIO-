@@ -7,146 +7,352 @@
 <title>VYORA Studio</title>
 <style>
 *{box-sizing:border-box}
-body{margin:0;background:#080d18;color:white;font-family:Arial,sans-serif}
-header{padding:20px;background:#111b2e;text-align:center}
-header h1{color:#64e6cf;margin:0}
+body{margin:0;background:#080d18;color:#fff;font-family:Arial,sans-serif}
+header{padding:17px;background:#111b30;text-align:center;border-bottom:1px solid #263653}
+header h2{margin:0;color:#55d6ff;letter-spacing:2px}
+header small{color:#9eabc2}
 nav{display:flex;gap:8px;padding:12px;overflow:auto}
-button{border:0;border-radius:10px;padding:12px;background:#263650;color:white;font-weight:bold}
-button.active,.primary{background:#11b99a;color:#071b19}
-main{padding:15px;max-width:850px;margin:auto}
-.panel{background:#111b2e;padding:16px;border-radius:15px;margin:12px 0}
-h2{color:#64e6cf}
-input,select{max-width:100%;padding:10px;border-radius:8px}
-.preview{width:100%;max-height:420px;object-fit:contain;background:#05080e;margin-top:12px}
-label{display:block;margin:14px 0 5px}
-.tools{display:flex;gap:8px;flex-wrap:wrap}
-input[type=range]{width:100%}
-video{width:100%;max-height:400px}
-.small{color:#aab8cc;font-size:13px}
+nav button,.btn{border:0;border-radius:10px;padding:12px 15px;background:#1b2942;color:white;font-weight:bold}
+nav button.active,.primary{background:#087fce}
+main{padding:12px;max-width:850px;margin:auto}
+.panel{background:#111b2d;padding:14px;border-radius:15px;margin-bottom:14px}
+h3{margin:4px 0 14px;color:#61d9ff}
+label{display:block;margin:13px 0 6px;color:#c8d7ec;font-size:14px}
+input,select{width:100%;padding:11px;border-radius:9px;background:#202e46;color:white;border:1px solid #40516e}
+input[type=range]{padding:0;accent-color:#19baff}
+input[type=file]{font-size:13px}
+button{cursor:pointer}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.actions button{flex:1;min-width:100px}
+#canvasWrap{background:#050911;border-radius:12px;overflow:hidden;min-height:220px;display:flex;justify-content:center;align-items:center;position:relative}
+canvas{max-width:100%;max-height:65vh;touch-action:none;display:block}
+#cropBox{position:absolute;border:2px dashed #42d8ff;display:none;pointer-events:none}
+.hint{font-size:12px;color:#aab9d0;line-height:1.5}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+video{width:100%;max-height:55vh;background:#000;border-radius:10px}
+.hidden{display:none}
+footer{text-align:center;padding:20px;color:#8293ae;font-size:12px}
 </style>
 </head>
 <body>
 <header>
-<h1>VYORA STUDIO</h1>
-<p>PHOTO • VIDEO • AI CREATION</p>
+<h2>VYORA STUDIO</h2>
+<small>CREATE • EDIT • INSPIRE</small>
 </header>
+
 <nav>
-<button class="active" onclick="show('photo',this)">Photo Editor</button>
-<button onclick="show('video',this)">Video Editor</button>
-<button onclick="show('ai',this)">AI Enhance</button>
-<button onclick="show('premium',this)">Premium</button>
+<button class="active" onclick="showTab('photo',this)">Photo Editor</button>
+<button onclick="showTab('video',this)">Video Editor</button>
 </nav>
+
 <main>
-<section id="photo" class="panel">
-<h2>Photo Studio</h2>
+<section id="photo">
+<div class="panel">
+<h3>PHOTO STUDIO</h3>
+<label>अपनी फोटो चुनें</label>
 <input type="file" id="photoFile" accept="image/*">
-<img id="photoPreview" class="preview" hidden>
+<p class="hint">फोटो चुनने के बाद नीचे दिए गए टूल से एडिट करें।</p>
+<div id="canvasWrap">
+<canvas id="canvas" width="1080" height="1080"></canvas>
+<div id="cropBox"></div>
+</div>
+<div class="actions">
+<button class="btn" onclick="rotatePhoto()">↻ Rotate</button>
+<button class="btn" onclick="resetPhoto()">Reset</button>
+<button class="btn" onclick="toggleCrop()">Crop Mode</button>
+</div>
+<p class="hint" id="cropHint">Crop Mode चालू करके फोटो पर उंगली से क्षेत्र चुनें, फिर Apply Crop दबाएँ।</p>
+<button class="btn primary" style="width:100%" onclick="applyCrop()">Apply Crop</button>
+</div>
+
+<div class="panel">
+<h3>PHOTO ADJUSTMENT</h3>
 <label>Brightness</label>
-<input type="range" id="brightness" min="0" max="200" value="100">
+<input id="brightness" type="range" min="0" max="200" value="100">
 <label>Contrast</label>
-<input type="range" id="contrast" min="0" max="200" value="100">
+<input id="contrast" type="range" min="0" max="200" value="100">
 <label>Saturation</label>
-<input type="range" id="saturation" min="0" max="200" value="100">
-<label>Photo Filter</label>
+<input id="saturation" type="range" min="0" max="200" value="100">
+<label>Zoom</label>
+<input id="zoom" type="range" min="50" max="200" value="100">
+<label>Rotate</label>
+<input id="angle" type="range" min="-180" max="180" value="0">
+</div>
+
+<div class="panel">
+<h3>20+ PHOTO FILTERS</h3>
 <select id="filter">
 <option value="none">Original</option>
 <option value="grayscale(1)">Black & White</option>
 <option value="sepia(1)">Vintage</option>
-<option value="saturate(1.7)">Vivid</option>
-<option value="contrast(1.3) saturate(1.3)">Cinematic</option>
-<option value="hue-rotate(35deg)">Color Shift</option>
+<option value="sepia(.5) saturate(1.5)">Warm Vintage</option>
+<option value="saturate(1.8)">Vivid</option>
+<option value="saturate(.5)">Soft</option>
+<option value="contrast(1.3)">High Contrast</option>
+<option value="brightness(1.2)">Bright</option>
+<option value="brightness(.8)">Dark Mood</option>
+<option value="hue-rotate(25deg)">Golden</option>
+<option value="hue-rotate(80deg)">Green Mood</option>
+<option value="hue-rotate(160deg)">Cool</option>
+<option value="hue-rotate(210deg)">Blue</option>
+<option value="hue-rotate(280deg)">Purple</option>
+<option value="invert(.15)">Fade</option>
+<option value="sepia(.3) saturate(1.8)">Retro</option>
+<option value="contrast(1.2) saturate(1.4)">Cinematic</option>
+<option value="grayscale(.5) contrast(1.2)">Classic</option>
+<option value="saturate(2) contrast(1.1)">Color Pop</option>
+<option value="sepia(.2) brightness(1.1)">Soft Warm</option>
+<option value="blur(1px)">Soft Focus</option>
+<option value="contrast(1.5) saturate(.8)">Dramatic</option>
 </select>
-<label>Frame</label>
+</div>
+
+<div class="panel">
+<h3>FRAME STUDIO</h3>
+<label>Frame Style</label>
 <select id="frame">
-<option value="0">No Frame</option>
-<option value="8">Classic White</option>
-<option value="14">Premium Gold</option>
-<option value="20">Bold Border</option>
+<option value="none">No Frame</option>
+<option value="white">White Frame</option>
+<option value="black">Black Frame</option>
+<option value="gold">Golden Frame</option>
+<option value="neon">Neon Frame</option>
+<option value="pink">Pink Frame</option>
+<option value="blue">Blue Frame</option>
 </select>
-<div class="tools">
-<button onclick="rotatePhoto()">Rotate</button>
-<button onclick="resetPhoto()">Reset</button>
-<button class="primary" onclick="downloadPhoto()">Download HD Photo</button>
+<label>Frame Thickness</label>
+<input id="thickness" type="range" min="5" max="70" value="20">
+</div>
+
+<div class="panel">
+<h3>TEXT STUDIO</h3>
+<label>अपना टेक्स्ट लिखें</label>
+<input id="photoText" placeholder="अपना टेक्स्ट यहाँ लिखें">
+<div class="grid">
+<div>
+<label>Text Color</label>
+<input type="color" id="textColor" value="#ffffff">
+</div>
+<div>
+<label>Text Size</label>
+<input type="range" id="textSize" min="20" max="120" value="55">
+</div>
+</div>
+<label>Text Position - ऊपर / नीचे</label>
+<input id="textPosition" type="range" min="10" max="95" value="85">
+</div>
+
+<div class="panel">
+<h3>HD EXPORT</h3>
+<p class="hint">एडिट की हुई फोटो 1080 × 1080 JPG में डाउनलोड करें।</p>
+<button class="btn primary" style="width:100%;padding:15px" onclick="downloadPhoto()">⬇ DOWNLOAD HD PHOTO</button>
 </div>
 </section>
 
-<section id="video" class="panel" hidden>
-<h2>Video Studio</h2>
+<section id="video" class="hidden">
+<div class="panel">
+<h3>VIDEO STUDIO</h3>
+<label>अपना वीडियो चुनें</label>
 <input type="file" id="videoFile" accept="video/*">
-<video id="videoPreview" controls hidden></video>
-<label>Add Music</label>
+<video id="videoPreview" controls playsinline></video>
+<label>अपने मोबाइल से म्यूजिक चुनें</label>
 <input type="file" id="musicFile" accept="audio/*">
-<audio id="musicPreview" controls></audio>
-<p class="small">यह शुरुआती वर्जन है। वीडियो में नया म्यूजिक मिक्स और HD Export आगे के चरण में जोड़ेंगे।</p>
-</section>
-
-<section id="ai" class="panel" hidden>
-<h2>AI Photo Enhancement</h2>
-<p>AI Quality Enhancement का अगला चरण यहाँ जोड़ा जाएगा।</p>
-<p class="small">वास्तविक AI Upscaling के लिए AI मॉडल और सर्वर कनेक्शन जरूरी होगा।</p>
-</section>
-
-<section id="premium" class="panel" hidden>
-<h2>VYORA Premium</h2>
-<p>Free और Premium सुविधाएँ आगे जोड़ी जाएँगी।</p>
-<p class="small">यह अभी केवल डेमो स्क्रीन है। कोई भुगतान चालू नहीं है।</p>
+<audio id="musicPreview" controls style="width:100%;margin-top:12px"></audio>
+<p class="hint">यह अभी वीडियो और ऑडियो का प्रीव्यू है। म्यूजिक को वीडियो में मिलाकर डाउनलोड करने के लिए आगे वीडियो रेंडरिंग सिस्टम जोड़ना होगा।</p>
+</div>
 </section>
 </main>
+<footer>VYORA STUDIO • YOUR CREATIVE SPACE</footer>
+
 <script>
-const $=id=>document.getElementById(id);
-let originalImage=null,rotation=0;
-function show(id,btn){
-document.querySelectorAll('main section').forEach(s=>s.hidden=true);
-$(id).hidden=false;
+const canvas=document.getElementById('canvas');
+const ctx=canvas.getContext('2d');
+let img=new Image();
+let hasPhoto=false, rotation=0, cropMode=false;
+let cropStart=null,cropEnd=null;
+let photoURL=null;
+
+function showTab(id,btn){
+document.getElementById('photo').classList.toggle('hidden',id!=='photo');
+document.getElementById('video').classList.toggle('hidden',id!=='video');
 document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
 btn.classList.add('active');
 }
-$('photoFile').onchange=e=>{
-const file=e.target.files[0];if(!file)return;
-const reader=new FileReader();
-reader.onload=ev=>{
-originalImage=new Image();
-originalImage.onload=()=>{$('photoPreview').src=ev.target.result;$('photoPreview').hidden=false;resetPhoto()};
-originalImage.src=ev.target.result;
-};
-reader.readAsDataURL(file);
-};
-function applyFilter(){
-$('photoPreview').style.filter=
-`brightness(${$('brightness').value}%) contrast(${$('contrast').value}%) saturate(${$('saturation').value}%) ${$('filter').value}`;
-$('photoPreview').style.border=$('frame').value+'px solid '+($('frame').value==14?'#d6ad54':'white');
-$('photoPreview').style.transform=`rotate(${rotation}deg)`;
+
+function drawPhoto(){
+ctx.clearRect(0,0,canvas.width,canvas.height);
+if(!hasPhoto){
+ctx.fillStyle='#101a2b';ctx.fillRect(0,0,1080,1080);
+ctx.fillStyle='#55d6ff';ctx.font='bold 55px Arial';
+ctx.textAlign='center';ctx.fillText('VYORA STUDIO',540,510);
+ctx.fillStyle='#ffffff';ctx.font='30px Arial';
+ctx.fillText('Choose Your Photo',540,570);
+return;
 }
-['brightness','contrast','saturation','filter','frame'].forEach(id=>$(id).addEventListener('input',applyFilter));
-function resetPhoto(){
+let z=Number(document.getElementById('zoom').value)/100;
+let angle=Number(document.getElementById('angle').value)*Math.PI/180;
+let bw=canvas.width*z,bh=canvas.height*z;
+let scale=Math.max(canvas.width/img.width,canvas.height/img.height)*z;
+bw=img.width*scale;bh=img.height*scale;
+ctx.save();
+ctx.translate(540,540);
+ctx.rotate(angle);
+ctx.filter=
+'brightness('+document.getElementById('brightness').value+'%) '+
+'contrast('+document.getElementById('contrast').value+'%) '+
+'saturate('+document.getElementById('saturation').value+'%) '+
+document.getElementById('filter').value;
+ctx.drawImage(img,-bw/2,-bh/2,bw,bh);
+ctx.restore();
+ctx.filter='none';
+drawFrame();
+drawText();
+}
+
+function drawFrame(){
+let type=document.getElementById('frame').value;
+if(type==='none')return;
+let t=Number(document.getElementById('thickness').value);
+let colors={white:'#ffffff',black:'#000000',gold:'#d9ad45',neon:'#16e5ff',pink:'#ff6bba',blue:'#348cff'};
+ctx.save();
+ctx.strokeStyle=colors[type];
+ctx.lineWidth=t;
+ctx.strokeRect(t/2,t/2,1080-t,1080-t);
+if(type==='gold'){
+ctx.strokeStyle='#fff0ad';ctx.lineWidth=3;
+ctx.strokeRect(t+5,t+5,1080-2*t-10,1080-2*t-10);
+}
+ctx.restore();
+}
+
+function drawText(){
+let text=document.getElementById('photoText').value;
+if(!text)return;
+let size=Number(document.getElementById('textSize').value);
+let y=1080*Number(document.getElementById('textPosition').value)/100;
+ctx.save();
+ctx.font='bold '+size+'px Arial';
+ctx.textAlign='center';
+ctx.lineWidth=5;
+ctx.strokeStyle='rgba(0,0,0,.7)';
+ctx.strokeText(text,540,y);
+ctx.fillStyle=document.getElementById('textColor').value;
+ctx.fillText(text,540,y);
+ctx.restore();
+}
+
+document.getElementById('photoFile').addEventListener('change',e=>{
+let file=e.target.files[0];if(!file)return;
+if(photoURL)URL.revokeObjectURL(photoURL);
+photoURL=URL.createObjectURL(file);
+img.onload=()=>{
+hasPhoto=true;
 rotation=0;
-['brightness','contrast','saturation'].forEach(id=>$(id).value=100);
-$('filter').value='none';$('frame').value=0;applyFilter();
+document.getElementById('angle').value=0;
+drawPhoto();
+};
+img.src=photoURL;
+});
+
+['brightness','contrast','saturation','zoom','angle','filter','frame','thickness','photoText','textColor','textSize','textPosition'].forEach(id=>{
+document.getElementById(id).addEventListener('input',drawPhoto);
+});
+
+function rotatePhoto(){
+let a=Number(document.getElementById('angle').value);
+document.getElementById('angle').value=(a+90)>180?(a-270):(a+90);
+drawPhoto();
 }
-function rotatePhoto(){rotation=(rotation+90)%360;applyFilter()}
+
+function resetPhoto(){
+['brightness','contrast','saturation','zoom'].forEach(id=>document.getElementById(id).value=100);
+document.getElementById('angle').value=0;
+document.getElementById('filter').value='none';
+document.getElementById('frame').value='none';
+document.getElementById('thickness').value=20;
+document.getElementById('photoText').value='';
+drawPhoto();
+}
+
 function downloadPhoto(){
-if(!originalImage)return alert('पहले फोटो चुनें');
-const canvas=document.createElement('canvas');
-const ctx=canvas.getContext('2d');
-const r=rotation*Math.PI/180;
-const w=originalImage.naturalWidth,h=originalImage.naturalHeight;
-canvas.width=rotation%180===0?w:h;
-canvas.height=rotation%180===0?h:w;
-ctx.save();ctx.translate(canvas.width/2,canvas.height/2);ctx.rotate(r);
-ctx.filter=`brightness(${$('brightness').value}%) contrast(${$('contrast').value}%) saturate(${$('saturation').value}%) ${$('filter').value}`;
-ctx.drawImage(originalImage,-w/2,-h/2,w,h);ctx.restore();
-const border=Number($('frame').value);
-if(border){ctx.filter='none';ctx.lineWidth=border*2;ctx.strokeStyle=border===14?'#d6ad54':'white';ctx.strokeRect(border,border,canvas.width-2*border,canvas.height-2*border)}
-const a=document.createElement('a');a.download='VYORA-HD.jpg';a.href=canvas.toDataURL('image/jpeg',0.95);a.click();
+if(!hasPhoto){alert('पहले फोटो चुनें');return;}
+let link=document.createElement('a');
+link.download='VYORA-HD-Photo.jpg';
+link.href=canvas.toDataURL('image/jpeg',.95);
+link.click();
 }
-$('videoFile').onchange=e=>{
-const f=e.target.files[0];if(!f)return;
-$('videoPreview').src=URL.createObjectURL(f);$('videoPreview').hidden=false;
+
+function toggleCrop(){
+if(!hasPhoto){alert('पहले फोटो चुनें');return;}
+cropMode=!cropMode;
+document.getElementById('cropBox').style.display=cropMode?'block':'none';
+document.getElementById('cropHint').textContent=cropMode?'फोटो पर उंगली खींचकर Crop क्षेत्र चुनें।':'Crop Mode बंद है।';
+}
+
+function canvasPoint(e){
+let r=canvas.getBoundingClientRect();
+return {
+x:(e.clientX-r.left)*canvas.width/r.width,
+y:(e.clientY-r.top)*canvas.height/r.height
 };
-$('musicFile').onchange=e=>{
-const f=e.target.files[0];if(!f)return;
-$('musicPreview').src=URL.createObjectURL(f);
+}
+canvas.addEventListener('pointerdown',e=>{
+if(!cropMode)return;
+cropStart=canvasPoint(e);cropEnd=cropStart;
+canvas.setPointerCapture(e.pointerId);updateCropBox();
+});
+canvas.addEventListener('pointermove',e=>{
+if(!cropMode||!cropStart)return;
+cropEnd=canvasPoint(e);updateCropBox();
+});
+canvas.addEventListener('pointerup',e=>{
+if(!cropMode||!cropStart)return;
+cropEnd=canvasPoint(e);updateCropBox();
+});
+function updateCropBox(){
+let r=canvas.getBoundingClientRect();
+let x=Math.min(cropStart.x,cropEnd.x);
+let y=Math.min(cropStart.y,cropEnd.y);
+let w=Math.abs(cropEnd.x-cropStart.x);
+let h=Math.abs(cropEnd.y-cropStart.y);
+let b=document.getElementById('cropBox');
+b.style.left=(canvas.offsetLeft+x/1080*canvas.clientWidth)+'px';
+b.style.top=(canvas.offsetTop+y/1080*canvas.clientHeight)+'px';
+b.style.width=(w/1080*canvas.clientWidth)+'px';
+b.style.height=(h/1080*canvas.clientHeight)+'px';
+}
+function applyCrop(){
+if(!cropStart||!cropEnd){alert('पहले फोटो पर Crop क्षेत्र चुनें');return;}
+let x=Math.min(cropStart.x,cropEnd.x);
+let y=Math.min(cropStart.y,cropEnd.y);
+let w=Math.abs(cropEnd.x-cropStart.x);
+let h=Math.abs(cropEnd.y-cropStart.y);
+if(w<20||h<20){alert('थोड़ा बड़ा Crop क्षेत्र चुनें');return;}
+let temp=document.createElement('canvas');
+temp.width=1080;temp.height=1080;
+let t=temp.getContext('2d');
+t.fillStyle='#111';t.fillRect(0,0,1080,1080);
+t.drawImage(canvas,x,y,w,h,0,0,1080,1080);
+let cropped=new Image();
+cropped.onload=()=>{
+img=cropped;
+document.getElementById('zoom').value=100;
+document.getElementById('angle').value=0;
+cropMode=false;cropStart=null;cropEnd=null;
+document.getElementById('cropBox').style.display='none';
+drawPhoto();
 };
+cropped.src=temp.toDataURL();
+}
+
+document.getElementById('videoFile').addEventListener('change',e=>{
+let f=e.target.files[0];if(f)document.getElementById('videoPreview').src=URL.createObjectURL(f);
+});
+document.getElementById('musicFile').addEventListener('change',e=>{
+let f=e.target.files[0];if(f)document.getElementById('musicPreview').src=URL.createObjectURL(f);
+});
+drawPhoto();
 </script>
 </body>
 </html>
+
+
