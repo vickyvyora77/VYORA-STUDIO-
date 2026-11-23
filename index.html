@@ -3,35 +3,32 @@
 <html lang="hi">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>VYORA Studio</title>
 <style>
 *{box-sizing:border-box}
-body{margin:0;background:#080d18;color:#fff;font-family:Arial,sans-serif}
-header{padding:17px;background:#111b30;text-align:center;border-bottom:1px solid #263653}
-header h2{margin:0;color:#55d6ff;letter-spacing:2px}
-header small{color:#9eabc2}
+body{margin:0;background:#080d18;color:white;font-family:Arial}
+header{background:#111b30;padding:18px;text-align:center}
+header h2{color:#55d6ff;letter-spacing:3px;margin:0}
+header small{color:#aab9d0}
 nav{display:flex;gap:8px;padding:12px;overflow:auto}
-nav button,.btn{border:0;border-radius:10px;padding:12px 15px;background:#1b2942;color:white;font-weight:bold}
-nav button.active,.primary{background:#087fce}
-main{padding:12px;max-width:850px;margin:auto}
-.panel{background:#111b2d;padding:14px;border-radius:15px;margin-bottom:14px}
-h3{margin:4px 0 14px;color:#61d9ff}
-label{display:block;margin:13px 0 6px;color:#c8d7ec;font-size:14px}
-input,select{width:100%;padding:11px;border-radius:9px;background:#202e46;color:white;border:1px solid #40516e}
+button{border:0;border-radius:9px;padding:12px;background:#20314d;color:white;font-weight:bold}
+button.active,.primary{background:#087fce}
+main{max-width:850px;margin:auto;padding:12px}
+.panel{background:#111b2d;padding:15px;border-radius:14px;margin-bottom:14px}
+h3{color:#55d6ff;margin-top:0}
+label{display:block;margin:13px 0 6px;font-size:14px}
+input,select{width:100%;padding:10px;border-radius:8px;border:1px solid #40516e;background:#202e46;color:white}
 input[type=range]{padding:0;accent-color:#19baff}
-input[type=file]{font-size:13px}
-button{cursor:pointer}
 .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
-.actions button{flex:1;min-width:100px}
-#canvasWrap{background:#050911;border-radius:12px;overflow:hidden;min-height:220px;display:flex;justify-content:center;align-items:center;position:relative}
-canvas{max-width:100%;max-height:65vh;touch-action:none;display:block}
-#cropBox{position:absolute;border:2px dashed #42d8ff;display:none;pointer-events:none}
+.actions button{flex:1}
+#stage{background:#050911;border-radius:12px;overflow:hidden;text-align:center}
+canvas{width:100%;height:auto;display:block;touch-action:none}
 .hint{font-size:12px;color:#aab9d0;line-height:1.5}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-video{width:100%;max-height:55vh;background:#000;border-radius:10px}
+video{width:100%;background:#000;border-radius:10px}
 .hidden{display:none}
-footer{text-align:center;padding:20px;color:#8293ae;font-size:12px}
+footer{text-align:center;padding:20px;color:#8495ae}
 </style>
 </head>
 <body>
@@ -41,8 +38,8 @@ footer{text-align:center;padding:20px;color:#8293ae;font-size:12px}
 </header>
 
 <nav>
-<button class="active" onclick="showTab('photo',this)">Photo Editor</button>
-<button onclick="showTab('video',this)">Video Editor</button>
+<button class="active" onclick="tab('photo',this)">Photo Editor</button>
+<button onclick="tab('video',this)">Video Editor</button>
 </nav>
 
 <main>
@@ -50,42 +47,37 @@ footer{text-align:center;padding:20px;color:#8293ae;font-size:12px}
 <div class="panel">
 <h3>PHOTO STUDIO</h3>
 <label>अपनी फोटो चुनें</label>
-<input type="file" id="photoFile" accept="image/*">
-<p class="hint">फोटो चुनने के बाद नीचे दिए गए टूल से एडिट करें।</p>
-<div id="canvasWrap">
-<canvas id="canvas" width="1080" height="1080"></canvas>
-<div id="cropBox"></div>
-</div>
+<input type="file" id="file" accept="image/*">
+<div id="stage"><canvas id="canvas" width="1080" height="1080"></canvas></div>
 <div class="actions">
-<button class="btn" onclick="rotatePhoto()">↻ Rotate</button>
-<button class="btn" onclick="resetPhoto()">Reset</button>
-<button class="btn" onclick="toggleCrop()">Crop Mode</button>
+<button onclick="rotate()">↻ Rotate</button>
+<button onclick="reset()">Reset</button>
+<button onclick="cropMode()">Crop Mode</button>
 </div>
-<p class="hint" id="cropHint">Crop Mode चालू करके फोटो पर उंगली से क्षेत्र चुनें, फिर Apply Crop दबाएँ।</p>
-<button class="btn primary" style="width:100%" onclick="applyCrop()">Apply Crop</button>
+<p class="hint" id="cropHelp">Crop Mode चालू करके फोटो पर उंगली से क्षेत्र चुनें।</p>
+<button class="primary" style="width:100%" onclick="applyCrop()">Apply Crop</button>
 </div>
 
 <div class="panel">
-<h3>PHOTO ADJUSTMENT</h3>
-<label>Brightness</label>
-<input id="brightness" type="range" min="0" max="200" value="100">
-<label>Contrast</label>
-<input id="contrast" type="range" min="0" max="200" value="100">
-<label>Saturation</label>
-<input id="saturation" type="range" min="0" max="200" value="100">
+<h3>ADVANCED ADJUSTMENT</h3>
+<label>Brightness: <span id="brightnessValue">100</span>%</label>
+<input type="range" id="brightness" min="0" max="200" value="100">
+<label>Contrast: <span id="contrastValue">100</span>%</label>
+<input type="range" id="contrast" min="0" max="200" value="100">
+<label>Saturation: <span id="saturationValue">100</span>%</label>
+<input type="range" id="saturation" min="0" max="200" value="100">
 <label>Zoom</label>
-<input id="zoom" type="range" min="50" max="200" value="100">
-<label>Rotate</label>
-<input id="angle" type="range" min="-180" max="180" value="0">
+<input type="range" id="zoom" min="50" max="200" value="100">
+<label>Rotation</label>
+<input type="range" id="angle" min="-180" max="180" value="0">
 </div>
 
 <div class="panel">
-<h3>20+ PHOTO FILTERS</h3>
+<h3>22 PHOTO FILTERS</h3>
 <select id="filter">
 <option value="none">Original</option>
 <option value="grayscale(1)">Black & White</option>
 <option value="sepia(1)">Vintage</option>
-<option value="sepia(.5) saturate(1.5)">Warm Vintage</option>
 <option value="saturate(1.8)">Vivid</option>
 <option value="saturate(.5)">Soft</option>
 <option value="contrast(1.3)">High Contrast</option>
@@ -104,47 +96,43 @@ footer{text-align:center;padding:20px;color:#8293ae;font-size:12px}
 <option value="sepia(.2) brightness(1.1)">Soft Warm</option>
 <option value="blur(1px)">Soft Focus</option>
 <option value="contrast(1.5) saturate(.8)">Dramatic</option>
+<option value="sepia(.5)">Old Film</option>
+<option value="saturate(1.4) contrast(1.1)">Rich Color</option>
 </select>
 </div>
 
 <div class="panel">
 <h3>FRAME STUDIO</h3>
-<label>Frame Style</label>
+<label>Frame</label>
 <select id="frame">
 <option value="none">No Frame</option>
-<option value="white">White Frame</option>
-<option value="black">Black Frame</option>
-<option value="gold">Golden Frame</option>
-<option value="neon">Neon Frame</option>
-<option value="pink">Pink Frame</option>
-<option value="blue">Blue Frame</option>
+<option value="white">White</option>
+<option value="black">Black</option>
+<option value="gold">Golden</option>
+<option value="neon">Neon</option>
+<option value="pink">Pink</option>
+<option value="blue">Blue</option>
 </select>
 <label>Frame Thickness</label>
-<input id="thickness" type="range" min="5" max="70" value="20">
+<input type="range" id="thickness" min="5" max="70" value="20">
 </div>
 
 <div class="panel">
 <h3>TEXT STUDIO</h3>
 <label>अपना टेक्स्ट लिखें</label>
-<input id="photoText" placeholder="अपना टेक्स्ट यहाँ लिखें">
+<input id="photoText" placeholder="यहाँ टेक्स्ट लिखें">
 <div class="grid">
-<div>
-<label>Text Color</label>
-<input type="color" id="textColor" value="#ffffff">
+<div><label>Text Color</label><input type="color" id="textColor" value="#ffffff"></div>
+<div><label>Text Size</label><input type="range" id="textSize" min="20" max="120" value="55"></div>
 </div>
-<div>
-<label>Text Size</label>
-<input type="range" id="textSize" min="20" max="120" value="55">
-</div>
-</div>
-<label>Text Position - ऊपर / नीचे</label>
-<input id="textPosition" type="range" min="10" max="95" value="85">
+<label>Text Position</label>
+<input type="range" id="textPosition" min="10" max="95" value="85">
 </div>
 
 <div class="panel">
-<h3>HD EXPORT</h3>
-<p class="hint">एडिट की हुई फोटो 1080 × 1080 JPG में डाउनलोड करें।</p>
-<button class="btn primary" style="width:100%;padding:15px" onclick="downloadPhoto()">⬇ DOWNLOAD HD PHOTO</button>
+<h3>HD PHOTO EXPORT</h3>
+<button class="primary" style="width:100%;padding:16px" onclick="downloadPhoto()">DOWNLOAD HD PHOTO</button>
+<p class="hint">JPG • 1080 × 1080 • High Quality</p>
 </div>
 </section>
 
@@ -157,7 +145,7 @@ footer{text-align:center;padding:20px;color:#8293ae;font-size:12px}
 <label>अपने मोबाइल से म्यूजिक चुनें</label>
 <input type="file" id="musicFile" accept="audio/*">
 <audio id="musicPreview" controls style="width:100%;margin-top:12px"></audio>
-<p class="hint">यह अभी वीडियो और ऑडियो का प्रीव्यू है। म्यूजिक को वीडियो में मिलाकर डाउनलोड करने के लिए आगे वीडियो रेंडरिंग सिस्टम जोड़ना होगा।</p>
+<p class="hint">यह संस्करण वीडियो और म्यूजिक का प्रीव्यू देता है। अभी वीडियो में नया गाना मिलाकर HD एक्सपोर्ट और मल्टी-लेयर रेंडरिंग उपलब्ध नहीं है।</p>
 </div>
 </section>
 </main>
@@ -165,194 +153,242 @@ footer{text-align:center;padding:20px;color:#8293ae;font-size:12px}
 
 <script>
 const canvas=document.getElementById('canvas');
-const ctx=canvas.getContext('2d');
+const ctx=canvas.getContext('2d',{willReadFrequently:true});
 let img=new Image();
-let hasPhoto=false, rotation=0, cropMode=false;
-let cropStart=null,cropEnd=null;
+let hasPhoto=false;
+let cropping=false;
+let start=null,end=null;
+let originalCrop=null;
 let photoURL=null;
 
-function showTab(id,btn){
-document.getElementById('photo').classList.toggle('hidden',id!=='photo');
-document.getElementById('video').classList.toggle('hidden',id!=='video');
+const $=id=>document.getElementById(id);
+
+function tab(id,button){
+$('photo').classList.toggle('hidden',id!=='photo');
+$('video').classList.toggle('hidden',id!=='video');
 document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
-btn.classList.add('active');
+button.classList.add('active');
 }
 
+$('file').addEventListener('change',e=>{
+const f=e.target.files[0];
+if(!f)return;
+if(photoURL)URL.revokeObjectURL(photoURL);
+photoURL=URL.createObjectURL(f);
+img.onload=()=>{
+hasPhoto=true;
+originalCrop=null;
+reset();
+};
+img.src=photoURL;
+});
+
+const controlIds=['brightness','contrast','saturation','zoom','angle','filter','frame','thickness','photoText','textColor','textSize','textPosition'];
+
+controlIds.forEach(id=>{
+$(id).addEventListener('input',()=>{
+if(id==='brightness')$('brightnessValue').textContent=$(id).value;
+if(id==='contrast')$('contrastValue').textContent=$(id).value;
+if(id==='saturation')$('saturationValue').textContent=$(id).value;
+drawPhoto();
+});
+});
+
 function drawPhoto(){
-ctx.clearRect(0,0,canvas.width,canvas.height);
+ctx.clearRect(0,0,1080,1080);
+
 if(!hasPhoto){
-ctx.fillStyle='#101a2b';ctx.fillRect(0,0,1080,1080);
-ctx.fillStyle='#55d6ff';ctx.font='bold 55px Arial';
-ctx.textAlign='center';ctx.fillText('VYORA STUDIO',540,510);
-ctx.fillStyle='#ffffff';ctx.font='30px Arial';
-ctx.fillText('Choose Your Photo',540,570);
+ctx.fillStyle='#101a2b';
+ctx.fillRect(0,0,1080,1080);
+ctx.fillStyle='#55d6ff';
+ctx.textAlign='center';
+ctx.font='bold 55px Arial';
+ctx.fillText('VYORA STUDIO',540,520);
 return;
 }
-let z=Number(document.getElementById('zoom').value)/100;
-let angle=Number(document.getElementById('angle').value)*Math.PI/180;
-let bw=canvas.width*z,bh=canvas.height*z;
-let scale=Math.max(canvas.width/img.width,canvas.height/img.height)*z;
-bw=img.width*scale;bh=img.height*scale;
-ctx.save();
-ctx.translate(540,540);
-ctx.rotate(angle);
-ctx.filter=
-'brightness('+document.getElementById('brightness').value+'%) '+
-'contrast('+document.getElementById('contrast').value+'%) '+
-'saturate('+document.getElementById('saturation').value+'%) '+
-document.getElementById('filter').value;
-ctx.drawImage(img,-bw/2,-bh/2,bw,bh);
-ctx.restore();
-ctx.filter='none';
+
+let zoom=Number($('zoom').value)/100;
+let angle=Number($('angle').value)*Math.PI/180;
+let scale=Math.max(1080/img.width,1080/img.height)*zoom;
+let w=img.width*scale;
+let h=img.height*scale;
+
+let temp=document.createElement('canvas');
+temp.width=1080;
+temp.height=1080;
+let t=temp.getContext('2d',{willReadFrequently:true});
+
+t.save();
+t.translate(540,540);
+t.rotate(angle);
+t.filter=$('filter').value;
+t.drawImage(img,-w/2,-h/2,w,h);
+t.restore();
+t.filter='none';
+
+let imageData=t.getImageData(0,0,1080,1080);
+let data=imageData.data;
+let brightness=Number($('brightness').value)/100;
+let contrast=Number($('contrast').value)/100;
+let saturation=Number($('saturation').value)/100;
+let factor=(259*(contrast+1))/(255*(1-contrast));
+
+for(let i=0;i<data.length;i+=4){
+let r=data[i],g=data[i+1],b=data[i+2];
+r=factor*(r-128)+128;
+g=factor*(g-128)+128;
+b=factor*(b-128)+128;
+r*=brightness;g*=brightness;b*=brightness;
+let gray=.299*r+.587*g+.114*b;
+r=gray+(r-gray)*saturation;
+g=gray+(g-gray)*saturation;
+b=gray+(b-gray)*saturation;
+data[i]=Math.max(0,Math.min(255,r));
+data[i+1]=Math.max(0,Math.min(255,g));
+data[i+2]=Math.max(0,Math.min(255,b));
+}
+t.putImageData(imageData,0,0);
+
+ctx.drawImage(temp,0,0);
 drawFrame();
 drawText();
 }
 
 function drawFrame(){
-let type=document.getElementById('frame').value;
+let type=$('frame').value;
 if(type==='none')return;
-let t=Number(document.getElementById('thickness').value);
-let colors={white:'#ffffff',black:'#000000',gold:'#d9ad45',neon:'#16e5ff',pink:'#ff6bba',blue:'#348cff'};
+let colors={white:'#fff',black:'#000',gold:'#d9ad45',neon:'#16e5ff',pink:'#ff6bba',blue:'#348cff'};
+let thickness=Number($('thickness').value);
 ctx.save();
 ctx.strokeStyle=colors[type];
-ctx.lineWidth=t;
-ctx.strokeRect(t/2,t/2,1080-t,1080-t);
+ctx.lineWidth=thickness;
+ctx.strokeRect(thickness/2,thickness/2,1080-thickness,1080-thickness);
 if(type==='gold'){
-ctx.strokeStyle='#fff0ad';ctx.lineWidth=3;
-ctx.strokeRect(t+5,t+5,1080-2*t-10,1080-2*t-10);
+ctx.strokeStyle='#fff0ad';
+ctx.lineWidth=3;
+ctx.strokeRect(thickness+5,thickness+5,1080-2*thickness-10,1080-2*thickness-10);
 }
 ctx.restore();
 }
 
 function drawText(){
-let text=document.getElementById('photoText').value;
+let text=$('photoText').value;
 if(!text)return;
-let size=Number(document.getElementById('textSize').value);
-let y=1080*Number(document.getElementById('textPosition').value)/100;
+let size=Number($('textSize').value);
+let y=1080*Number($('textPosition').value)/100;
 ctx.save();
 ctx.font='bold '+size+'px Arial';
 ctx.textAlign='center';
 ctx.lineWidth=5;
-ctx.strokeStyle='rgba(0,0,0,.7)';
+ctx.strokeStyle='rgba(0,0,0,.8)';
 ctx.strokeText(text,540,y);
-ctx.fillStyle=document.getElementById('textColor').value;
+ctx.fillStyle=$('textColor').value;
 ctx.fillText(text,540,y);
 ctx.restore();
 }
 
-document.getElementById('photoFile').addEventListener('change',e=>{
-let file=e.target.files[0];if(!file)return;
-if(photoURL)URL.revokeObjectURL(photoURL);
-photoURL=URL.createObjectURL(file);
-img.onload=()=>{
-hasPhoto=true;
-rotation=0;
-document.getElementById('angle').value=0;
-drawPhoto();
-};
-img.src=photoURL;
-});
-
-['brightness','contrast','saturation','zoom','angle','filter','frame','thickness','photoText','textColor','textSize','textPosition'].forEach(id=>{
-document.getElementById(id).addEventListener('input',drawPhoto);
-});
-
-function rotatePhoto(){
-let a=Number(document.getElementById('angle').value);
-document.getElementById('angle').value=(a+90)>180?(a-270):(a+90);
+function rotate(){
+let a=Number($('angle').value)+90;
+if(a>180)a-=360;
+$('angle').value=a;
 drawPhoto();
 }
 
-function resetPhoto(){
-['brightness','contrast','saturation','zoom'].forEach(id=>document.getElementById(id).value=100);
-document.getElementById('angle').value=0;
-document.getElementById('filter').value='none';
-document.getElementById('frame').value='none';
-document.getElementById('thickness').value=20;
-document.getElementById('photoText').value='';
+function reset(){
+['brightness','contrast','saturation','zoom'].forEach(id=>$(id).value=100);
+$('angle').value=0;
+$('filter').value='none';
+$('frame').value='none';
+$('thickness').value=20;
+$('photoText').value='';
+$('textSize').value=55;
+$('textPosition').value=85;
+$('brightnessValue').textContent='100';
+$('contrastValue').textContent='100';
+$('saturationValue').textContent='100';
 drawPhoto();
 }
 
 function downloadPhoto(){
 if(!hasPhoto){alert('पहले फोटो चुनें');return;}
-let link=document.createElement('a');
-link.download='VYORA-HD-Photo.jpg';
-link.href=canvas.toDataURL('image/jpeg',.95);
-link.click();
+canvas.toBlob(blob=>{
+if(!blob){alert('फोटो डाउनलोड नहीं हो सकी');return;}
+let url=URL.createObjectURL(blob);
+let a=document.createElement('a');
+a.href=url;
+a.download='VYORA-HD-Photo.jpg';
+a.click();
+setTimeout(()=>URL.revokeObjectURL(url),2000);
+},'image/jpeg',.95);
 }
 
-function toggleCrop(){
+function cropMode(){
 if(!hasPhoto){alert('पहले फोटो चुनें');return;}
-cropMode=!cropMode;
-document.getElementById('cropBox').style.display=cropMode?'block':'none';
-document.getElementById('cropHint').textContent=cropMode?'फोटो पर उंगली खींचकर Crop क्षेत्र चुनें।':'Crop Mode बंद है।';
+cropping=!cropping;
+start=null;
+end=null;
+$('cropHelp').textContent=cropping?
+'फोटो पर उंगली खींचकर Crop का क्षेत्र चुनें।':
+'Crop Mode बंद है।';
 }
 
-function canvasPoint(e){
+function point(e){
 let r=canvas.getBoundingClientRect();
 return {
-x:(e.clientX-r.left)*canvas.width/r.width,
-y:(e.clientY-r.top)*canvas.height/r.height
+x:(e.clientX-r.left)*1080/r.width,
+y:(e.clientY-r.top)*1080/r.height
 };
 }
+
 canvas.addEventListener('pointerdown',e=>{
-if(!cropMode)return;
-cropStart=canvasPoint(e);cropEnd=cropStart;
-canvas.setPointerCapture(e.pointerId);updateCropBox();
+if(!cropping)return;
+start=point(e);
+end=start;
+canvas.setPointerCapture(e.pointerId);
 });
 canvas.addEventListener('pointermove',e=>{
-if(!cropMode||!cropStart)return;
-cropEnd=canvasPoint(e);updateCropBox();
+if(!cropping||!start)return;
+end=point(e);
 });
 canvas.addEventListener('pointerup',e=>{
-if(!cropMode||!cropStart)return;
-cropEnd=canvasPoint(e);updateCropBox();
+if(!cropping||!start)return;
+end=point(e);
 });
-function updateCropBox(){
-let r=canvas.getBoundingClientRect();
-let x=Math.min(cropStart.x,cropEnd.x);
-let y=Math.min(cropStart.y,cropEnd.y);
-let w=Math.abs(cropEnd.x-cropStart.x);
-let h=Math.abs(cropEnd.y-cropStart.y);
-let b=document.getElementById('cropBox');
-b.style.left=(canvas.offsetLeft+x/1080*canvas.clientWidth)+'px';
-b.style.top=(canvas.offsetTop+y/1080*canvas.clientHeight)+'px';
-b.style.width=(w/1080*canvas.clientWidth)+'px';
-b.style.height=(h/1080*canvas.clientHeight)+'px';
-}
+
 function applyCrop(){
-if(!cropStart||!cropEnd){alert('पहले फोटो पर Crop क्षेत्र चुनें');return;}
-let x=Math.min(cropStart.x,cropEnd.x);
-let y=Math.min(cropStart.y,cropEnd.y);
-let w=Math.abs(cropEnd.x-cropStart.x);
-let h=Math.abs(cropEnd.y-cropStart.y);
-if(w<20||h<20){alert('थोड़ा बड़ा Crop क्षेत्र चुनें');return;}
+if(!start||!end){alert('पहले फोटो पर Crop क्षेत्र चुनें');return;}
+let x=Math.min(start.x,end.x);
+let y=Math.min(start.y,end.y);
+let w=Math.abs(end.x-start.x);
+let h=Math.abs(end.y-start.y);
+if(w<20||h<20){alert('बड़ा Crop क्षेत्र चुनें');return;}
 let temp=document.createElement('canvas');
 temp.width=1080;temp.height=1080;
 let t=temp.getContext('2d');
-t.fillStyle='#111';t.fillRect(0,0,1080,1080);
 t.drawImage(canvas,x,y,w,h,0,0,1080,1080);
 let cropped=new Image();
 cropped.onload=()=>{
 img=cropped;
-document.getElementById('zoom').value=100;
-document.getElementById('angle').value=0;
-cropMode=false;cropStart=null;cropEnd=null;
-document.getElementById('cropBox').style.display='none';
+$('zoom').value=100;
+$('angle').value=0;
+cropping=false;
+start=null;end=null;
 drawPhoto();
+$('cropHelp').textContent='Crop लागू हो गया।';
 };
-cropped.src=temp.toDataURL();
+cropped.src=temp.toDataURL('image/png');
 }
 
-document.getElementById('videoFile').addEventListener('change',e=>{
-let f=e.target.files[0];if(f)document.getElementById('videoPreview').src=URL.createObjectURL(f);
+$('videoFile').addEventListener('change',e=>{
+let f=e.target.files[0];
+if(f)$('videoPreview').src=URL.createObjectURL(f);
 });
-document.getElementById('musicFile').addEventListener('change',e=>{
-let f=e.target.files[0];if(f)document.getElementById('musicPreview').src=URL.createObjectURL(f);
+$('musicFile').addEventListener('change',e=>{
+let f=e.target.files[0];
+if(f)$('musicPreview').src=URL.createObjectURL(f);
 });
+
 drawPhoto();
 </script>
 </body>
 </html>
-
-
