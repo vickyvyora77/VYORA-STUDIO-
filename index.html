@@ -1,7 +1,17 @@
 
 <!DOCTYPE html>
 <html lang="hi">
-<head>
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#080d18">
+<link rel="icon" href="./icon.svg" type="image/svg+xml">
+
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./service-worker.js");
+  });
+}
+</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>VYORA Studio</title>
