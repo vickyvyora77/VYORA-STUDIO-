@@ -1,20 +1,13 @@
-
 <!DOCTYPE html>
 <html lang="hi">
-<link rel="manifest" href="./manifest.json">
-<meta name="theme-color" content="#080d18">
-<link rel="icon" href="./icon.svg" type="image/svg+xml">
-
-<script>
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker.register("./service-worker.js");
-  });
-}
-</script>
+<head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#080d18">
+<link rel="manifest" href="./manifest.json">
+<link rel="icon" href="./icon.svg" type="image/svg+xml">
 <title>VYORA Studio</title>
+
 <style>
 *{box-sizing:border-box}
 body{margin:0;background:#080d18;color:white;font-family:Arial}
@@ -22,7 +15,7 @@ header{background:#111b30;padding:18px;text-align:center}
 header h2{color:#55d6ff;letter-spacing:3px;margin:0}
 header small{color:#aab9d0}
 nav{display:flex;gap:8px;padding:12px;overflow:auto}
-button{border:0;border-radius:9px;padding:12px;background:#20314d;color:white;font-weight:bold}
+button{border:0;border-radius:9px;padding:12px;background:#20314d;color:white;font-weight:bold;cursor:pointer}
 button.active,.primary{background:#087fce}
 main{max-width:850px;margin:auto;padding:12px}
 .panel{background:#111b2d;padding:15px;border-radius:14px;margin-bottom:14px}
@@ -37,10 +30,16 @@ canvas{width:100%;height:auto;display:block;touch-action:none}
 .hint{font-size:12px;color:#aab9d0;line-height:1.5}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 video{width:100%;background:#000;border-radius:10px}
-.hidden{display:none}
+.hidden{display:none!important}
 footer{text-align:center;padding:20px;color:#8495ae}
+.walletBalance{font-size:32px;font-weight:bold;color:#55d6ff;margin:12px 0}
+.transaction{padding:12px;background:#202e46;border-radius:9px;margin-top:9px}
+.transaction small{color:#aab9d0}
+.status{font-size:13px;color:#aab9d0;margin-top:10px}
+.danger{background:#a83245}
 </style>
 </head>
+
 <body>
 <header>
 <h2>VYORA STUDIO</h2>
@@ -50,9 +49,12 @@ footer{text-align:center;padding:20px;color:#8495ae}
 <nav>
 <button class="active" onclick="tab('photo',this)">Photo Editor</button>
 <button onclick="tab('video',this)">Video Editor</button>
+<button onclick="tab('wallet',this)">Admin Wallet</button>
 </nav>
 
 <main>
+
+<!-- PHOTO EDITOR -->
 <section id="photo">
 <div class="panel">
 <h3>PHOTO STUDIO</h3>
@@ -146,6 +148,7 @@ footer{text-align:center;padding:20px;color:#8495ae}
 </div>
 </section>
 
+<!-- VIDEO EDITOR -->
 <section id="video" class="hidden">
 <div class="panel">
 <h3>VIDEO STUDIO</h3>
@@ -155,10 +158,49 @@ footer{text-align:center;padding:20px;color:#8495ae}
 <label>अपने मोबाइल से म्यूजिक चुनें</label>
 <input type="file" id="musicFile" accept="audio/*">
 <audio id="musicPreview" controls style="width:100%;margin-top:12px"></audio>
-<p class="hint">यह संस्करण वीडियो और म्यूजिक का प्रीव्यू देता है। अभी वीडियो में नया गाना मिलाकर HD एक्सपोर्ट और मल्टी-लेयर रेंडरिंग उपलब्ध नहीं है।</p>
+<p class="hint">इस संस्करण में वीडियो और म्यूजिक का प्रीव्यू उपलब्ध है। वीडियो में गाना मिलाकर HD एक्सपोर्ट अभी शामिल नहीं है।</p>
 </div>
 </section>
+
+<!-- ADMIN WALLET -->
+<section id="wallet" class="hidden">
+
+<div class="panel" id="loginPanel">
+<h3>ADMIN LOGIN</h3>
+<p class="hint">यह Wallet केवल अधिकृत Admin अकाउंट के लिए है।</p>
+
+<label>Admin Email</label>
+<input type="email" id="adminEmail" placeholder="अपना Admin Email लिखें">
+
+<label>Password</label>
+<input type="password" id="adminPassword" placeholder="अपना Password लिखें">
+
+<button class="primary" style="width:100%;margin-top:15px" id="loginButton" onclick="adminLogin()">LOGIN</button>
+<p class="status" id="loginStatus"></p>
+</div>
+
+<div class="hidden" id="walletPanel">
+<div class="panel">
+<h3>VYORA ADMIN WALLET</h3>
+<p class="hint">Admin Account Verified</p>
+<div class="walletBalance" id="walletBalance">₹0.00</div>
+<p id="walletCurrency" class="hint">Currency: INR</p>
+<button onclick="refreshWallet()" class="primary">REFRESH BALANCE</button>
+<button onclick="adminLogout()" class="danger">LOGOUT</button>
+<p class="status" id="walletStatus"></p>
+</div>
+
+<div class="panel">
+<h3>TRANSACTION HISTORY</h3>
+<div id="transactionList">
+<p class="hint">Transactions लोड हो रही हैं...</p>
+</div>
+</div>
+</div>
+
+</section>
 </main>
+
 <footer>VYORA STUDIO • YOUR CREATIVE SPACE</footer>
 
 <script>
@@ -168,14 +210,14 @@ let img=new Image();
 let hasPhoto=false;
 let cropping=false;
 let start=null,end=null;
-let originalCrop=null;
 let photoURL=null;
 
 const $=id=>document.getElementById(id);
 
 function tab(id,button){
-$('photo').classList.toggle('hidden',id!=='photo');
-$('video').classList.toggle('hidden',id!=='video');
+['photo','video','wallet'].forEach(name=>{
+$(name).classList.toggle('hidden',name!==id);
+});
 document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
 button.classList.add('active');
 }
@@ -187,7 +229,6 @@ if(photoURL)URL.revokeObjectURL(photoURL);
 photoURL=URL.createObjectURL(f);
 img.onload=()=>{
 hasPhoto=true;
-originalCrop=null;
 reset();
 };
 img.src=photoURL;
@@ -400,5 +441,197 @@ if(f)$('musicPreview').src=URL.createObjectURL(f);
 
 drawPhoto();
 </script>
+
+<!-- SUPABASE ADMIN WALLET -->
+<script type="module">
+import {createClient} from
+'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+const SUPABASE_URL='https://gsruwrzwrresxhmhrypf.supabase.co';
+const SUPABASE_KEY='sb_publishable_wNrnIupEj4tjYYcSjaW93A_d_NSOhoK';
+
+const ADMIN_UID='08aab84d-b09d-4514-ad80-c35c24a5a248';
+
+const supabase=createClient(SUPABASE_URL,SUPABASE_KEY);
+
+const el=id=>document.getElementById(id);
+
+function showStatus(id,message){
+el(id).textContent=message;
+}
+
+function showLogin(){
+el('loginPanel').classList.remove('hidden');
+el('walletPanel').classList.add('hidden');
+}
+
+function showWallet(){
+el('loginPanel').classList.add('hidden');
+el('walletPanel').classList.remove('hidden');
+}
+
+async function loadWallet(user){
+if(!user || user.id!==ADMIN_UID){
+showLogin();
+showStatus('loginStatus','यह अकाउंट Admin के लिए अधिकृत नहीं है।');
+await supabase.auth.signOut();
+return;
+}
+
+showWallet();
+showStatus('walletStatus','Wallet लोड हो रहा है...');
+
+const {data,error}=await supabase
+.from('vyora_wallet')
+.select('id,balance,currency')
+.eq('owner_id',user.id)
+.maybeSingle();
+
+if(error){
+showStatus('walletStatus','Wallet लोड नहीं हुआ: '+error.message);
+return;
+}
+
+if(!data){
+el('walletBalance').textContent='₹0.00';
+el('walletCurrency').textContent='Wallet रिकॉर्ड नहीं मिला।';
+showStatus('walletStatus','Supabase में Admin Wallet रिकॉर्ड जाँचें।');
+return;
+}
+
+const amount=Number(data.balance||0);
+const currency=data.currency||'INR';
+
+el('walletBalance').textContent=
+new Intl.NumberFormat('en-IN',{
+style:'currency',
+currency:currency
+}).format(amount);
+
+el('walletCurrency').textContent='Currency: '+currency;
+showStatus('walletStatus','Wallet सफलतापूर्वक लोड हुआ।');
+
+await loadTransactions(user);
+}
+
+async function loadTransactions(user){
+const list=el('transactionList');
+list.innerHTML='<p class="hint">Transactions लोड हो रही हैं...</p>';
+
+const {data,error}=await supabase
+.from('vyora_transactions')
+.select('transaction_type,amount,description,created_at')
+.eq('owner_id',user.id)
+.order('created_at',{ascending:false})
+.limit(50);
+
+if(error){
+list.textContent='Transaction History लोड नहीं हुई: '+error.message;
+return;
+}
+
+if(!data || data.length===0){
+list.innerHTML='<p class="hint">अभी कोई Transaction उपलब्ध नहीं है।</p>';
+return;
+}
+
+list.innerHTML='';
+
+data.forEach(item=>{
+const box=document.createElement('div');
+box.className='transaction';
+
+const heading=document.createElement('strong');
+heading.textContent=
+(item.transaction_type==='credit'?'जमा':'निकासी')+
+' • '+new Intl.NumberFormat('en-IN',{
+style:'currency',
+currency:'INR'
+}).format(Number(item.amount));
+
+const description=document.createElement('div');
+description.textContent=item.description||'कोई विवरण नहीं';
+
+const date=document.createElement('small');
+date.textContent=item.created_at?
+new Date(item.created_at).toLocaleString('hi-IN'):'';
+
+box.append(heading,description,date);
+list.appendChild(box);
+});
+}
+
+window.adminLogin=async function(){
+const email=el('adminEmail').value.trim();
+const password=el('adminPassword').value;
+
+if(!email || !password){
+showStatus('loginStatus','Email और Password भरें।');
+return;
+}
+
+const button=el('loginButton');
+button.disabled=true;
+button.textContent='LOGIN हो रहा है...';
+showStatus('loginStatus','कृपया प्रतीक्षा करें...');
+
+const {data,error}=await supabase.auth.signInWithPassword({
+email,
+password
+});
+
+button.disabled=false;
+button.textContent='LOGIN';
+
+if(error){
+showStatus('loginStatus','Login असफल: '+error.message);
+return;
+}
+
+if(data.user.id!==ADMIN_UID){
+await supabase.auth.signOut();
+showLogin();
+showStatus('loginStatus','यह Admin अकाउंट नहीं है।');
+return;
+}
+
+el('adminPassword').value='';
+await loadWallet(data.user);
+};
+
+window.adminLogout=async function(){
+await supabase.auth.signOut();
+showLogin();
+showStatus('loginStatus','आप Logout हो गए हैं।');
+};
+
+window.refreshWallet=async function(){
+const {data,error}=await supabase.auth.getUser();
+if(error || !data.user){
+showLogin();
+return;
+}
+await loadWallet(data.user);
+};
+
+supabase.auth.onAuthStateChange((event,session)=>{
+if(event==='SIGNED_OUT'){
+showLogin();
+return;
+}
+if(session?.user){
+setTimeout(()=>loadWallet(session.user),0);
+}
+});
+
+const {data:{session}}=await supabase.auth.getSession();
+
+if(session?.user){
+await loadWallet(session.user);
+}else{
+showLogin();
+}
+</script>
+
 </body>
 </html>
