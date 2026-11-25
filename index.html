@@ -3,731 +3,428 @@
 <html lang="hi">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#080d18">
-<link rel="manifest" href="./manifest.json">
-<link rel="icon" href="./icon.svg" type="image/svg+xml">
-<title>VYORA Studio</title>
+<title>VYORA STUDIO</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
 *{box-sizing:border-box}
-body{margin:0;background:#080d18;color:white;font-family:Arial}
-header{background:#111b30;padding:18px;text-align:center}
-header h2{color:#55d6ff;letter-spacing:3px;margin:0}
-header small{color:#aab9d0}
-nav{display:flex;gap:8px;padding:12px;overflow:auto}
-button{border:0;border-radius:9px;padding:12px;background:#20314d;color:white;font-weight:bold;cursor:pointer}
-button.active,.primary{background:#087fce}
-button:disabled{opacity:.5}
-main{max-width:850px;margin:auto;padding:12px}
-.panel{background:#111b2d;padding:15px;border-radius:14px;margin-bottom:14px}
-h3{color:#55d6ff;margin-top:0}
-label{display:block;margin:13px 0 6px;font-size:14px}
-input,select{width:100%;padding:10px;border-radius:8px;border:1px solid #40516e;background:#202e46;color:white}
-input[type=range]{padding:0;accent-color:#19baff}
-.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
-.actions button{flex:1}
-#stage{background:#050911;border-radius:12px;overflow:hidden;text-align:center}
-canvas{width:100%;height:auto;display:block;touch-action:none}
-.hint{font-size:12px;color:#aab9d0;line-height:1.5}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-video{width:100%;background:#000;border-radius:10px}
+body{margin:0;background:#080d18;color:white;font-family:Arial,sans-serif}
+header{padding:18px;text-align:center;background:#111a2d;border-bottom:1px solid #293653}
+header h1{margin:0;color:#69c7ff;letter-spacing:2px}
+nav{display:flex;gap:7px;overflow-x:auto;padding:10px;background:#10182a}
+nav button{white-space:nowrap}
+button{background:#167bd0;color:white;border:0;border-radius:9px;padding:11px 15px;font-weight:bold;cursor:pointer}
+button:active{opacity:.7}
+main{padding:14px;max-width:850px;margin:auto}
+.page{display:none}
+.page.active{display:block}
+.card{background:#121d31;border:1px solid #263957;border-radius:14px;padding:15px;margin:12px 0}
+h2{color:#71caff}
+h3{margin-top:5px}
+input,select{background:#091426;color:white;border:1px solid #344965;border-radius:8px;padding:11px;width:100%;margin:7px 0}
+input[type=range]{padding:0}
+label{display:block;margin-top:12px;color:#c9d8ed}
+canvas,video{width:100%;background:#05080e;border-radius:10px;margin-top:10px}
+.plan{border:1px solid #38577c;border-radius:12px;padding:14px;margin:10px 0;background:#101a2c}
+.price{font-size:25px;color:#71caff;font-weight:bold}
+.small{font-size:12px;color:#aabbd1}
+.stat{font-size:24px;color:#76d5ff;font-weight:bold}
 .hidden{display:none!important}
-footer{text-align:center;padding:20px;color:#8495ae}
-.walletBalance{font-size:32px;font-weight:bold;color:#55d6ff;margin:12px 0}
-.transaction{padding:12px;background:#202e46;border-radius:9px;margin-top:9px}
-.transaction small{color:#aab9d0}
-.status{font-size:13px;color:#aab9d0;margin-top:10px}
-.danger{background:#a83245}
-.plan{border:1px solid #304766;background:#17263e;padding:15px;border-radius:12px;margin-top:12px}
-.plan h3{margin-bottom:5px}
-.planPrice{font-size:30px;color:#55d6ff;font-weight:bold;margin:12px 0}
-.stat{background:#202e46;padding:14px;border-radius:10px;min-width:0}
-.stat strong{font-size:22px;color:#55d6ff;display:block;margin-top:8px}
-.stat small{color:#aab9d0}
-.statGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.adminTitle{color:#55d6ff}
+.status{color:#8fe2a6}
 </style>
 </head>
 
 <body>
-
 <header>
-<h2>VYORA STUDIO</h2>
-<small>CREATE • EDIT • INSPIRE</small>
+<h1>VYORA STUDIO</h1>
+<p>Photo • Video • Premium Studio</p>
 </header>
 
 <nav>
-<button class="active" onclick="tab('photo',this)">Photo Editor</button>
-<button onclick="tab('video',this)">Video Editor</button>
-<button onclick="tab('premium',this)">Premium</button>
-<button onclick="tab('wallet',this)">Admin Center</button>
+<button onclick="showPage('photo')">Photo Editor</button>
+<button onclick="showPage('video')">Video Editor</button>
+<button onclick="showPage('premium')">Premium</button>
+<button onclick="showPage('admin')">Admin Center</button>
 </nav>
 
 <main>
 
 <!-- PHOTO EDITOR -->
-<section id="photo">
+<section id="photo" class="page active">
+<h2>Photo Editor</h2>
+<div class="card">
+<label>मोबाइल से फोटो चुनें</label>
+<input type="file" id="photoFile" accept="image/*">
+<canvas id="photoCanvas" width="1080" height="1080"></canvas>
 
-<div class="panel">
-<h3>PHOTO STUDIO</h3>
-<label>अपनी फोटो चुनें</label>
-<input type="file" id="file" accept="image/*">
-<div id="stage">
-<canvas id="canvas" width="1080" height="1080"></canvas>
-</div>
-<div class="actions">
-<button onclick="rotate()">↻ Rotate</button>
-<button onclick="reset()">Reset</button>
-<button onclick="cropMode()">Crop Mode</button>
-</div>
-<p class="hint" id="cropHelp">Crop Mode चालू करके फोटो पर उंगली से क्षेत्र चुनें।</p>
-<button class="primary" style="width:100%" onclick="applyCrop()">Apply Crop</button>
-</div>
-
-<div class="panel">
-<h3>ADVANCED ADJUSTMENT</h3>
-
-<label>Brightness: <span id="brightnessValue">100</span>%</label>
+<label>Brightness</label>
 <input type="range" id="brightness" min="0" max="200" value="100">
 
-<label>Contrast: <span id="contrastValue">100</span>%</label>
+<label>Contrast</label>
 <input type="range" id="contrast" min="0" max="200" value="100">
 
-<label>Saturation: <span id="saturationValue">100</span>%</label>
+<label>Saturation</label>
 <input type="range" id="saturation" min="0" max="200" value="100">
 
 <label>Zoom</label>
-<input type="range" id="zoom" min="50" max="200" value="100">
+<input type="range" id="zoom" min="50" max="150" value="100">
 
-<label>Rotation</label>
-<input type="range" id="angle" min="-180" max="180" value="0">
-</div>
-
-<div class="panel">
-<h3>PHOTO FILTERS</h3>
+<label>Filter</label>
 <select id="filter">
-<option value="none">Original</option>
-<option value="grayscale(1)">Black & White</option>
-<option value="sepia(1)">Vintage</option>
-<option value="saturate(1.8)">Vivid</option>
-<option value="saturate(.5)">Soft</option>
-<option value="contrast(1.3)">High Contrast</option>
-<option value="brightness(1.2)">Bright</option>
-<option value="brightness(.8)">Dark Mood</option>
-<option value="hue-rotate(25deg)">Golden</option>
-<option value="hue-rotate(80deg)">Green Mood</option>
-<option value="hue-rotate(160deg)">Cool</option>
-<option value="hue-rotate(210deg)">Blue</option>
-<option value="hue-rotate(280deg)">Purple</option>
-<option value="invert(.15)">Fade</option>
-<option value="sepia(.3) saturate(1.8)">Retro</option>
-<option value="contrast(1.2) saturate(1.4)">Cinematic</option>
-<option value="grayscale(.5) contrast(1.2)">Classic</option>
-<option value="saturate(2) contrast(1.1)">Color Pop</option>
-<option value="sepia(.2) brightness(1.1)">Soft Warm</option>
-<option value="blur(1px)">Soft Focus</option>
-<option value="contrast(1.5) saturate(.8)">Dramatic</option>
-<option value="sepia(.5)">Old Film</option>
-<option value="saturate(1.4) contrast(1.1)">Rich Color</option>
+<option value="none">Normal</option>
+<option value="grayscale(100%)">Black & White</option>
+<option value="sepia(70%)">Sepia</option>
+<option value="contrast(120%) saturate(130%)">Vivid</option>
+<option value="brightness(110%) saturate(120%)">Bright</option>
+<option value="saturate(160%)">Colorful</option>
+<option value="grayscale(40%) contrast(120%)">Cinematic</option>
 </select>
-</div>
 
-<div class="panel">
-<h3>FRAME STUDIO</h3>
-<label>Frame</label>
-<select id="frame">
-<option value="none">No Frame</option>
-<option value="white">White</option>
-<option value="black">Black</option>
-<option value="gold">Golden</option>
-<option value="neon">Neon</option>
-<option value="pink">Pink</option>
-<option value="blue">Blue</option>
-</select>
-<label>Frame Thickness</label>
-<input type="range" id="thickness" min="5" max="70" value="20">
+<button onclick="rotatePhoto()">Rotate</button>
+<button onclick="resetPhoto()">Reset</button>
+<button onclick="downloadPhoto()">Download HD Photo</button>
+<p class="small">नोट: HD export का आकार 1080 × 1080 pixels है।</p>
 </div>
-
-<div class="panel">
-<h3>TEXT STUDIO</h3>
-<label>अपना टेक्स्ट लिखें</label>
-<input id="photoText" placeholder="यहाँ टेक्स्ट लिखें">
-<div class="grid">
-<div>
-<label>Text Color</label>
-<input type="color" id="textColor" value="#ffffff">
-</div>
-<div>
-<label>Text Size</label>
-<input type="range" id="textSize" min="20" max="120" value="55">
-</div>
-</div>
-<label>Text Position</label>
-<input type="range" id="textPosition" min="10" max="95" value="85">
-</div>
-
-<div class="panel">
-<h3>HD PHOTO EXPORT</h3>
-<button class="primary" style="width:100%;padding:16px" onclick="downloadPhoto()">DOWNLOAD HD PHOTO</button>
-<p class="hint">JPG • 1080 × 1080 • High Quality</p>
-</div>
-
 </section>
 
 <!-- VIDEO EDITOR -->
-<section id="video" class="hidden">
-<div class="panel">
-<h3>VIDEO STUDIO</h3>
-<label>अपना वीडियो चुनें</label>
+<section id="video" class="page">
+<h2>Video Editor</h2>
+<div class="card">
+<label>मोबाइल से वीडियो चुनें</label>
 <input type="file" id="videoFile" accept="video/*">
 <video id="videoPreview" controls playsinline></video>
 
-<label>अपने मोबाइल से म्यूजिक चुनें</label>
-<input type="file" id="musicFile" accept="audio/*">
-<audio id="musicPreview" controls style="width:100%;margin-top:12px"></audio>
+<label>नया गाना चुनें</label>
+<input type="file" id="audioFile" accept="audio/*">
+<audio id="audioPreview" controls></audio>
 
-<p class="hint">
-इस संस्करण में वीडियो और म्यूजिक का अलग-अलग प्रीव्यू उपलब्ध है।
-वीडियो में गाना मिलाकर HD एक्सपोर्ट अभी शामिल नहीं है।
-</p>
+<label>गाने की आवाज़</label>
+<input type="range" id="audioVolume" min="0" max="100" value="70">
+
+<label>गाने का Start Time (सेकंड)</label>
+<input type="number" id="audioStart" min="0" value="0">
+
+<button onclick="playMusic()">गाना चलाएँ</button>
+<button onclick="pauseMusic()">गाना रोकें</button>
+<p class="small">यहाँ वीडियो और गाने का अलग-अलग Preview उपलब्ध है। अभी दोनों को मिलाकर नई वीडियो फ़ाइल Export करने की सुविधा नहीं जुड़ी है।</p>
 </div>
 </section>
 
-<!-- PREMIUM MEMBERSHIP -->
-<section id="premium" class="hidden">
-
-<div class="panel">
-<h3>👑 VYORA PREMIUM MEMBERSHIP</h3>
-<p class="hint">
-अपना प्लान चुनें और Premium Membership प्राप्त करें।
-</p>
+<!-- PREMIUM -->
+<section id="premium" class="page">
+<h2>VYORA Premium</h2>
+<p>अपनी पसंद का Premium Plan चुनें।</p>
 
 <div class="plan">
-<h3>1 MONTH</h3>
-<p class="hint">30 दिन की Membership</p>
-<div class="planPrice">₹99</div>
-<button class="primary" onclick="selectPremium('1 Month',99)">SELECT PLAN</button>
+<h3>1 Month</h3>
+<div class="price">₹99</div>
+<button onclick="selectPremium('1 Month','99')">Plan चुनें</button>
 </div>
 
 <div class="plan">
-<h3>3 MONTHS</h3>
-<p class="hint">90 दिन की Membership</p>
-<div class="planPrice">₹249</div>
-<button class="primary" onclick="selectPremium('3 Months',249)">SELECT PLAN</button>
+<h3>3 Months</h3>
+<div class="price">₹249</div>
+<button onclick="selectPremium('3 Months','249')">Plan चुनें</button>
 </div>
 
 <div class="plan">
-<h3>6 MONTHS</h3>
-<p class="hint">180 दिन की Membership</p>
-<div class="planPrice">₹399</div>
-<button class="primary" onclick="selectPremium('6 Months',399)">SELECT PLAN</button>
+<h3>6 Months</h3>
+<div class="price">₹399</div>
+<button onclick="selectPremium('6 Months','399')">Plan चुनें</button>
 </div>
 
 <div class="plan">
-<h3>12 MONTHS</h3>
-<p class="hint">365 दिन की Membership</p>
-<div class="planPrice">₹699</div>
-<button class="primary" onclick="selectPremium('12 Months',699)">SELECT PLAN</button>
+<h3>12 Months</h3>
+<div class="price">₹699</div>
+<button onclick="selectPremium('12 Months','699')">Plan चुनें</button>
 </div>
 
-<p id="premiumStatus" class="status">
-Payment Gateway अभी कनेक्ट नहीं है।
-</p>
+<div class="card" id="premiumMessage">
+Premium Plan चुनने पर उसकी जानकारी यहाँ दिखेगी।
+<p class="small">अभी Payment Gateway जुड़ा नहीं है। Plan चुनने से भुगतान या सदस्यता अपने आप सक्रिय नहीं होगी।</p>
 </div>
-
 </section>
 
-<!-- ADMIN CENTER -->
-<section id="wallet" class="hidden">
+<!-- ADMIN -->
+<section id="admin" class="page">
+<h2>Admin Center</h2>
 
-<div class="panel" id="loginPanel">
-<h3>VYORA ADMIN LOGIN</h3>
-<p class="hint">Admin Center केवल अधिकृत Admin Account के लिए है।</p>
-
-<label>Admin Email</label>
-<input type="email" id="adminEmail" placeholder="अपना Admin Email लिखें">
-
-<label>Password</label>
-<input type="password" id="adminPassword" placeholder="अपना Password लिखें">
-
-<button class="primary" style="width:100%;margin-top:15px" id="loginButton" onclick="adminLogin()">LOGIN</button>
-<p class="status" id="loginStatus"></p>
+<div class="card" id="loginBox">
+<h3>Admin Login</h3>
+<input type="email" id="adminEmail" placeholder="Admin Email">
+<input type="password" id="adminPassword" placeholder="Admin Password">
+<button onclick="adminLogin()">Login</button>
+<p id="loginMessage"></p>
 </div>
 
-<div class="hidden" id="walletPanel">
-
-<!-- ADMIN WALLET -->
-<div class="panel">
-<h3 class="adminTitle">VYORA ADMIN WALLET</h3>
-<p class="hint">Admin Account Verified</p>
-
-<div class="walletBalance" id="walletBalance">₹0.00</div>
-<p id="walletCurrency" class="hint">Currency: INR</p>
-
-<button onclick="refreshWallet()" class="primary">REFRESH BALANCE</button>
-<button onclick="adminLogout()" class="danger">LOGOUT</button>
-
-<p class="status" id="walletStatus"></p>
+<div id="adminPanel" class="hidden">
+<div class="card">
+<h3>Admin Dashboard</h3>
+<p class="status">Admin Access Verified</p>
+<button onclick="loadAdminData()">Refresh Data</button>
+<button onclick="adminLogout()">Logout</button>
 </div>
 
-<!-- MONETIZATION DASHBOARD -->
-<div class="panel">
-<h3 class="adminTitle">MONETIZATION DASHBOARD</h3>
-<p class="hint">सत्यापित कमाई का विवरण</p>
-
-<div class="statGrid">
-<div class="stat">
-<small>Total Earnings</small>
-<strong id="totalEarnings">₹0.00</strong>
+<div class="card">
+<h3>Admin Wallet</h3>
+<div class="stat" id="walletBalance">₹0.00</div>
+<p id="walletCurrency">Currency: INR</p>
+<p class="small">यह Wallet केवल Admin को दिखाई देता है। Balance डेटाबेस से पढ़ा जाता है।</p>
 </div>
 
-<div class="stat">
-<small>Premium Earnings</small>
-<strong id="premiumEarnings">₹0.00</strong>
+<div class="card">
+<h3>Monetization Dashboard</h3>
+<p>कुल Verified Credits</p>
+<div class="stat" id="totalEarnings">₹0.00</div>
 </div>
 
-<div class="stat">
-<small>Ads Earnings</small>
-<strong id="adsEarnings">₹0.00</strong>
+<div class="card">
+<h3>Premium Earnings</h3>
+<div class="stat" id="premiumEarnings">₹0.00</div>
 </div>
 
-<div class="stat">
-<small>Total Transactions</small>
-<strong id="totalTransactions">0</strong>
-</div>
-</div>
-
-<p class="hint">
-Premium और Ads की कमाई केवल सत्यापित Backend Transactions से दिखाई जाएगी।
-</p>
-<p class="status" id="monetizationStatus"></p>
+<div class="card">
+<h3>Ads Earnings</h3>
+<div class="stat" id="adsEarnings">₹0.00</div>
 </div>
 
-<!-- PREMIUM EARNINGS -->
-<div class="panel">
-<h3>👑 PREMIUM EARNINGS</h3>
-<p class="hint">Premium Membership से प्राप्त सत्यापित कमाई</p>
-<div class="walletBalance" id="premiumTotal">₹0.00</div>
+<div class="card">
+<h3>Transaction History</h3>
+<div id="transactionList">कोई Transaction उपलब्ध नहीं है।</div>
 </div>
-
-<!-- ADS EARNINGS -->
-<div class="panel">
-<h3>📢 ADS EARNINGS</h3>
-<p class="hint">विज्ञापन नेटवर्क से प्राप्त सत्यापित कमाई</p>
-<div class="walletBalance" id="adsTotal">₹0.00</div>
-</div>
-
-<!-- TRANSACTIONS -->
-<div class="panel">
-<h3>TRANSACTION HISTORY</h3>
-<div id="transactionList">
-<p class="hint">Transactions लोड हो रही हैं...</p>
-</div>
-</div>
-
 </div>
 </section>
 
 </main>
 
-<footer>VYORA STUDIO • YOUR CREATIVE SPACE</footer>
-
-<!-- PHOTO AND VIDEO JAVASCRIPT -->
 <script>
-const canvas=document.getElementById('canvas');
-const ctx=canvas.getContext('2d',{willReadFrequently:true});
-let img=new Image();
-let hasPhoto=false;
-let cropping=false;
-let start=null,end=null;
-let photoURL=null;
+const SUPABASE_URL = "https://gsruwrzwrresxhmhrypf.supabase.co";
+const SUPABASE_KEY = "sb_publishable_wNrnIupEj4tjYYcSjaW93A_d_NSOhoK";
+const ADMIN_UID = "08aab84d-b09d-4514-ad80-c35c24a5a248";
 
-const $=id=>document.getElementById(id);
+const db = window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 
-function tab(id,button){
-['photo','video','premium','wallet'].forEach(name=>{
-$(name).classList.toggle('hidden',name!==id);
-});
-document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
-button.classList.add('active');
+function showPage(id){
+ document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+ document.getElementById(id).classList.add("active");
 }
 
 function selectPremium(plan,price){
-$('premiumStatus').textContent=
-plan+' Plan चुना गया। कीमत ₹'+price+
-'। Payment Gateway जुड़ने के बाद भुगतान कर सकेंगे।';
+ document.getElementById("premiumMessage").innerHTML =
+ "<h3>आपका चुना हुआ Plan</h3><p>"+plan+"</p><div class='price'>₹"+price+
+ "</div><p>Payment Gateway जुड़ने के बाद भुगतान कर सकेंगे। अभी कोई भुगतान नहीं हुआ है।</p>";
 }
 
-$('file').addEventListener('change',e=>{
-const f=e.target.files[0];
-if(!f)return;
-if(photoURL)URL.revokeObjectURL(photoURL);
-photoURL=URL.createObjectURL(f);
-img.onload=()=>{
-hasPhoto=true;
-reset();
-};
-img.src=photoURL;
-});
-
-const controlIds=[
-'brightness','contrast','saturation','zoom','angle',
-'filter','frame','thickness','photoText','textColor',
-'textSize','textPosition'
-];
-
-controlIds.forEach(id=>{
-$(id).addEventListener('input',()=>{
-if(id==='brightness')$('brightnessValue').textContent=$(id).value;
-if(id==='contrast')$('contrastValue').textContent=$(id).value;
-if(id==='saturation')$('saturationValue').textContent=$(id).value;
-drawPhoto();
-});
-});
+/* PHOTO EDITOR */
+const canvas=document.getElementById("photoCanvas");
+const ctx=canvas.getContext("2d");
+let photoImage=new Image();
+let photoLoaded=false;
+let rotation=0;
 
 function drawPhoto(){
-ctx.clearRect(0,0,1080,1080);
-
-if(!hasPhoto){
-ctx.fillStyle='#101a2b';
-ctx.fillRect(0,0,1080,1080);
-ctx.fillStyle='#55d6ff';
-ctx.textAlign='center';
-ctx.font='bold 55px Arial';
-ctx.fillText('VYORA STUDIO',540,520);
-return;
+ if(!photoLoaded)return;
+ ctx.clearRect(0,0,1080,1080);
+ ctx.save();
+ ctx.translate(540,540);
+ ctx.rotate(rotation*Math.PI/180);
+ let z=Number(document.getElementById("zoom").value)/100;
+ let w=1080*z,h=1080*z;
+ let scale=Math.max(w/photoImage.width,h/photoImage.height);
+ w=photoImage.width*scale;
+ h=photoImage.height*scale;
+ w*=z; h*=z;
+ ctx.filter=
+ "brightness("+document.getElementById("brightness").value+"%) "+
+ "contrast("+document.getElementById("contrast").value+"%) "+
+ "saturate("+document.getElementById("saturation").value+"%) "+
+ document.getElementById("filter").value;
+ ctx.drawImage(photoImage,-w/2,-h/2,w,h);
+ ctx.restore();
+ ctx.filter="none";
 }
 
-let zoom=Number($('zoom').value)/100;
-let angle=Number($('angle').value)*Math.PI/180;
-let scale=Math.max(1080/img.width,1080/img.height)*zoom;
-let w=img.width*scale;
-let h=img.height*scale;
+document.getElementById("photoFile").addEventListener("change",e=>{
+ const file=e.target.files[0];
+ if(!file)return;
+ const url=URL.createObjectURL(file);
+ photoImage.onload=()=>{
+  photoLoaded=true;
+  rotation=0;
+  drawPhoto();
+  URL.revokeObjectURL(url);
+ };
+ photoImage.src=url;
+});
 
-let temp=document.createElement('canvas');
-temp.width=1080;
-temp.height=1080;
-let t=temp.getContext('2d',{willReadFrequently:true});
+["brightness","contrast","saturation","zoom","filter"].forEach(id=>{
+ document.getElementById(id).addEventListener("input",drawPhoto);
+});
 
-t.save();
-t.translate(540,540);
-t.rotate(angle);
-t.filter=$('filter').value;
-t.drawImage(img,-w/2,-h/2,w,h);
-t.restore();
-t.filter='none';
-
-let imageData=t.getImageData(0,0,1080,1080);
-let data=imageData.data;
-let brightness=Number($('brightness').value)/100;
-let contrast=Number($('contrast').value)/100;
-let saturation=Number($('saturation').value)/100;
-let factor=(259*(contrast+1))/(255*(1-contrast));
-
-for(let i=0;i<data.length;i+=4){
-let r=data[i],g=data[i+1],b=data[i+2];
-r=factor*(r-128)+128;
-g=factor*(g-128)+128;
-b=factor*(b-128)+128;
-r*=brightness;g*=brightness;b*=brightness;
-let gray=.299*r+.587*g+.114*b;
-r=gray+(r-gray)*saturation;
-g=gray+(g-gray)*saturation;
-b=gray+(b-gray)*saturation;
-data[i]=Math.max(0,Math.min(255,r));
-data[i+1]=Math.max(0,Math.min(255,g));
-data[i+2]=Math.max(0,Math.min(255,b));
+function rotatePhoto(){rotation=(rotation+90)%360;drawPhoto()}
+function resetPhoto(){
+ ["brightness","contrast","saturation","zoom"].forEach(id=>{
+  document.getElementById(id).value=id==="zoom"?100:100;
+ });
+ document.getElementById("filter").value="none";
+ rotation=0;
+ drawPhoto();
 }
-
-t.putImageData(imageData,0,0);
-ctx.drawImage(temp,0,0);
-drawFrame();
-drawText();
-}
-
-function drawFrame(){
-let type=$('frame').value;
-if(type==='none')return;
-let colors={
-white:'#fff',black:'#000',gold:'#d9ad45',
-neon:'#16e5ff',pink:'#ff6bba',blue:'#348cff'
-};
-let thickness=Number($('thickness').value);
-ctx.save();
-ctx.strokeStyle=colors[type];
-ctx.lineWidth=thickness;
-ctx.strokeRect(thickness/2,thickness/2,1080-thickness,1080-thickness);
-if(type==='gold'){
-ctx.strokeStyle='#fff0ad';
-ctx.lineWidth=3;
-ctx.strokeRect(thickness+5,thickness+5,1080-2*thickness-10,1080-2*thickness-10);
-}
-ctx.restore();
-}
-
-function drawText(){
-let text=$('photoText').value;
-if(!text)return;
-let size=Number($('textSize').value);
-let y=1080*Number($('textPosition').value)/100;
-ctx.save();
-ctx.font='bold '+size+'px Arial';
-ctx.textAlign='center';
-ctx.lineWidth=5;
-ctx.strokeStyle='rgba(0,0,0,.8)';
-ctx.strokeText(text,540,y);
-ctx.fillStyle=$('textColor').value;
-ctx.fillText(text,540,y);
-ctx.restore();
-}
-
-function rotate(){
-let a=Number($('angle').value)+90;
-if(a>180)a-=360;
-$('angle').value=a;
-drawPhoto();
-}
-
-function reset(){
-['brightness','contrast','saturation','zoom'].forEach(id=>$(id).value=100);
-$('angle').value=0;
-$('filter').value='none';
-$('frame').value='none';
-$('thickness').value=20;
-$('photoText').value='';
-$('textSize').value=55;
-$('textPosition').value=85;
-$('brightnessValue').textContent='100';
-$('contrastValue').textContent='100';
-$('saturationValue').textContent='100';
-drawPhoto();
-}
-
 function downloadPhoto(){
-if(!hasPhoto){alert('पहले फोटो चुनें');return;}
-canvas.toBlob(blob=>{
-if(!blob){alert('फोटो डाउनलोड नहीं हो सकी');return;}
-let url=URL.createObjectURL(blob);
-let a=document.createElement('a');
-a.href=url;
-a.download='VYORA-HD-Photo.jpg';
-a.click();
-setTimeout(()=>URL.revokeObjectURL(url),2000);
-},'image/jpeg',.95);
+ if(!photoLoaded){alert("पहले फोटो चुनें");return}
+ const link=document.createElement("a");
+ link.download="VYORA-HD-Photo.jpg";
+ link.href=canvas.toDataURL("image/jpeg",0.95);
+ link.click();
 }
 
-function cropMode(){
-if(!hasPhoto){alert('पहले फोटो चुनें');return;}
-cropping=!cropping;
-start=null;
-end=null;
-$('cropHelp').textContent=cropping?
-'फोटो पर उंगली खींचकर Crop का क्षेत्र चुनें।':
-'Crop Mode बंद है।';
+/* VIDEO PREVIEW */
+let videoURL=null,audioURL=null;
+const video=document.getElementById("videoPreview");
+const audio=document.getElementById("audioPreview");
+
+document.getElementById("videoFile").addEventListener("change",e=>{
+ if(videoURL)URL.revokeObjectURL(videoURL);
+ if(e.target.files[0]){
+  videoURL=URL.createObjectURL(e.target.files[0]);
+  video.src=videoURL;
+ }
+});
+
+document.getElementById("audioFile").addEventListener("change",e=>{
+ if(audioURL)URL.revokeObjectURL(audioURL);
+ if(e.target.files[0]){
+  audioURL=URL.createObjectURL(e.target.files[0]);
+  audio.src=audioURL;
+ }
+});
+
+document.getElementById("audioVolume").addEventListener("input",e=>{
+ audio.volume=Number(e.target.value)/100;
+});
+
+function playMusic(){
+ if(!audio.src){alert("पहले गाना चुनें");return}
+ audio.currentTime=Math.max(0,Number(document.getElementById("audioStart").value)||0);
+ audio.play();
+}
+function pauseMusic(){audio.pause()}
+
+/* ADMIN AUTH */
+async function adminLogin(){
+ const email=document.getElementById("adminEmail").value.trim();
+ const password=document.getElementById("adminPassword").value;
+ const message=document.getElementById("loginMessage");
+ message.textContent="Login हो रहा है...";
+
+ const {data,error}=await db.auth.signInWithPassword({email,password});
+ if(error){
+  message.textContent="Login Error: "+error.message;
+  return;
+ }
+ if(!data.user || data.user.id!==ADMIN_UID){
+  await db.auth.signOut();
+  message.textContent="यह Admin Account नहीं है।";
+  return;
+ }
+ message.textContent="Login सफल!";
+ await checkAdmin();
 }
 
-function point(e){
-let r=canvas.getBoundingClientRect();
-return {
-x:(e.clientX-r.left)*1080/r.width,
-y:(e.clientY-r.top)*1080/r.height
-};
+async function checkAdmin(){
+ const {data}=await db.auth.getUser();
+ if(data.user && data.user.id===ADMIN_UID){
+  document.getElementById("loginBox").classList.add("hidden");
+  document.getElementById("adminPanel").classList.remove("hidden");
+  await loadAdminData();
+ }else{
+  document.getElementById("loginBox").classList.remove("hidden");
+  document.getElementById("adminPanel").classList.add("hidden");
+ }
 }
 
-canvas.addEventListener('pointerdown',e=>{
-if(!cropping)return;
-start=point(e);
-end=start;
-canvas.setPointerCapture(e.pointerId);
-});
-
-canvas.addEventListener('pointermove',e=>{
-if(!cropping||!start)return;
-end=point(e);
-});
-
-canvas.addEventListener('pointerup',e=>{
-if(!cropping||!start)return;
-end=point(e);
-});
-
-function applyCrop(){
-if(!start||!end){alert('पहले फोटो पर Crop क्षेत्र चुनें');return;}
-let x=Math.min(start.x,end.x);
-let y=Math.min(start.y,end.y);
-let w=Math.abs(end.x-start.x);
-let h=Math.abs(end.y-start.y);
-if(w<20||h<20){alert('बड़ा Crop क्षेत्र चुनें');return;}
-
-let temp=document.createElement('canvas');
-temp.width=1080;
-temp.height=1080;
-let t=temp.getContext('2d');
-t.drawImage(canvas,x,y,w,h,0,0,1080,1080);
-
-let cropped=new Image();
-cropped.onload=()=>{
-img=cropped;
-$('zoom').value=100;
-$('angle').value=0;
-cropping=false;
-start=null;
-end=null;
-drawPhoto();
-$('cropHelp').textContent='Crop लागू हो गया।';
-};
-cropped.src=temp.toDataURL('image/png');
+async function adminLogout(){
+ await db.auth.signOut();
+ document.getElementById("adminPassword").value="";
+ checkAdmin();
 }
 
-$('videoFile').addEventListener('change',e=>{
-let f=e.target.files[0];
-if(f)$('videoPreview').src=URL.createObjectURL(f);
-});
+/* ADMIN WALLET AND MONETIZATION */
+async function loadAdminData(){
+ const {data:userData}=await db.auth.getUser();
+ if(!userData.user || userData.user.id!==ADMIN_UID){
+  await checkAdmin();
+  return;
+ }
 
-$('musicFile').addEventListener('change',e=>{
-let f=e.target.files[0];
-if(f)$('musicPreview').src=URL.createObjectURL(f);
-});
+ const userId=userData.user.id;
 
-drawPhoto();
+ const {data:wallet,error:walletError}=await db
+  .from("vyora_wallet")
+  .select("id,balance,currency")
+  .eq("owner_id",userId)
+  .maybeSingle();
+
+ if(walletError){
+  document.getElementById("walletBalance").textContent="Wallet Error";
+  console.error(walletError);
+ }else if(wallet){
+  document.getElementById("walletBalance").textContent=
+   "₹"+Number(wallet.balance||0).toFixed(2);
+  document.getElementById("walletCurrency").textContent=
+   "Currency: "+(wallet.currency||"INR");
+ }else{
+  document.getElementById("walletBalance").textContent="₹0.00";
+ }
+
+ const {data:transactions,error}=await db
+  .from("vyora_transactions")
+  .select("transaction_type,amount,description,created_at")
+  .eq("owner_id",userId)
+  .order("created_at",{ascending:false});
+
+ if(error){
+  document.getElementById("transactionList").textContent=
+   "Transaction Error: "+error.message;
+  return;
+ }
+
+ let total=0,premium=0,ads=0;
+ const list=document.getElementById("transactionList");
+ list.innerHTML="";
+
+ if(!transactions || transactions.length===0){
+  list.textContent="अभी कोई Transaction नहीं है।";
+ }else{
+  transactions.forEach(t=>{
+   const amount=Number(t.amount)||0;
+   const isCredit=t.transaction_type==="credit";
+   if(isCredit){
+    total+=amount;
+    const desc=(t.description||"").toUpperCase();
+    if(desc.startsWith("PREMIUM:"))premium+=amount;
+    if(desc.startsWith("ADS:"))ads+=amount;
+   }
+   const item=document.createElement("div");
+   item.className="plan";
+   const date=t.created_at?new Date(t.created_at).toLocaleString("hi-IN"):"";
+   item.textContent=
+    (isCredit?"+":"-")+" ₹"+amount.toFixed(2)+
+    " | "+(t.description||"Transaction")+
+    " | "+date;
+   list.appendChild(item);
+  });
+ }
+
+ document.getElementById("totalEarnings").textContent="₹"+total.toFixed(2);
+ document.getElementById("premiumEarnings").textContent="₹"+premium.toFixed(2);
+ document.getElementById("adsEarnings").textContent="₹"+ads.toFixed(2);
+}
+
+checkAdmin();
 </script>
-
-<!-- SUPABASE ADMIN CENTER -->
-<script type="module">
-import {createClient} from
-'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
-
-const SUPABASE_URL='https://gsruwrzwrresxhmhrypf.supabase.co';
-const SUPABASE_KEY='sb_publishable_wNrnIupEj4tjYYcSjaW93A_d_NSOhoK';
-const ADMIN_UID='08aab84d-b09d-4514-ad80-c35c24a5a248';
-
-const supabase=createClient(SUPABASE_URL,SUPABASE_KEY);
-const el=id=>document.getElementById(id);
-
-function showStatus(id,message){
-el(id).textContent=message;
-}
-
-function showLogin(){
-el('loginPanel').classList.remove('hidden');
-el('walletPanel').classList.add('hidden');
-}
-
-function showWallet(){
-el('loginPanel').classList.add('hidden');
-el('walletPanel').classList.remove('hidden');
-}
-
-function money(value){
-return new Intl.NumberFormat('en-IN',{
-style:'currency',
-currency:'INR'
-}).format(Number(value||0));
-}
-
-async function loadWallet(user){
-if(!user || user.id!==ADMIN_UID){
-showLogin();
-showStatus('loginStatus','यह अकाउंट Admin के लिए अधिकृत नहीं है।');
-await supabase.auth.signOut();
-return;
-}
-
-showWallet();
-showStatus('walletStatus','Wallet लोड हो रहा है...');
-
-const {data,error}=await supabase
-.from('vyora_wallet')
-.select('id,balance,currency')
-.eq('owner_id',user.id)
-.maybeSingle();
-
-if(error){
-showStatus('walletStatus','Wallet लोड नहीं हुआ: '+error.message);
-return;
-}
-
-if(!data){
-el('walletBalance').textContent='₹0.00';
-el('walletCurrency').textContent='Wallet रिकॉर्ड नहीं मिला।';
-showStatus('walletStatus','Supabase में Admin Wallet रिकॉर्ड जाँचें।');
-return;
-}
-
-const currency=data.currency||'INR';
-
-el('walletBalance').textContent=
-new Intl.NumberFormat('en-IN',{
-style:'currency',
-currency:currency
-}).format(Number(data.balance||0));
-
-el('walletCurrency').textContent='Currency: '+currency;
-showStatus('walletStatus','Wallet सफलतापूर्वक लोड हुआ।');
-
-await loadTransactions(user);
-}
-
-async function loadTransactions(user){
-const list=el('transactionList');
-list.innerHTML='<p class="hint">Transactions लोड हो रही हैं...</p>';
-
-const {data,error}=await supabase
-.from('vyora_transactions')
-.select('transaction_type,amount,description,created_at')
-.eq('owner_id',user.id)
-.order('created_at',{ascending:false});
-
-if(error){
-list.textContent='Transaction History लोड नहीं हुई: '+error.message;
-showStatus('monetizationStatus','कमाई का डेटा लोड नहीं हुआ: '+error.message);
-return;
-}
-
-const records=data||[];
-
-let total=0;
-let premium=0;
-let ads=0;
-let credits=0;
-
-records.forEach(item=>{
-if(item.transaction_type!=='credit')return;
-
-const amount=Number(item.amount||0);
-const description=(item.description||'').toUpperCase();
-
-total+=amount;
-credits++;
-
-if(description.startsWith('PREMIUM:')){
-premium+=amount;
-}
-if(description.startsWith('ADS:')){
-ads+=amount;
-}
-});
-
-el('totalEarnings').textContent=money(total);
-el('premiumEarnings').textContent=money(premium);
-el('adsEarnings').textContent=money(ads);
-el('totalTransactions').textContent=String(credits);
-el('premiumTotal').textContent=money(premium);
-el('adsTotal').textContent=money(ads);
-
-showStatus('monetizationStatus',
-'डेटा Supabase Transaction History से पढ़ा गया है।');
-
-if(records.length===0){
-list.innerHTML='<p class="hint">अभी कोई Transaction उपलब्ध नहीं है।</p>';
-return;
-}
-
-list.innerHTML='';
-
-records.forEach(item=>{
-const box=document.createElement('div');
-box.className='transaction';
-
-const heading=docum
+</body>
+</html>
