@@ -1,430 +1,291 @@
-
 <!DOCTYPE html>
 <html lang="hi">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#080d18">
+<meta name="description" content="VYORA STUDIO - Photo and Video Editing Studio">
 <title>VYORA STUDIO</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
 <style>
-*{box-sizing:border-box}
-body{margin:0;background:#080d18;color:white;font-family:Arial,sans-serif}
-header{padding:18px;text-align:center;background:#111a2d;border-bottom:1px solid #293653}
-header h1{margin:0;color:#69c7ff;letter-spacing:2px}
-nav{display:flex;gap:7px;overflow-x:auto;padding:10px;background:#10182a}
-nav button{white-space:nowrap}
-button{background:#167bd0;color:white;border:0;border-radius:9px;padding:11px 15px;font-weight:bold;cursor:pointer}
-button:active{opacity:.7}
-main{padding:14px;max-width:850px;margin:auto}
-.page{display:none}
-.page.active{display:block}
-.card{background:#121d31;border:1px solid #263957;border-radius:14px;padding:15px;margin:12px 0}
-h2{color:#71caff}
-h3{margin-top:5px}
-input,select{background:#091426;color:white;border:1px solid #344965;border-radius:8px;padding:11px;width:100%;margin:7px 0}
-input[type=range]{padding:0}
-label{display:block;margin-top:12px;color:#c9d8ed}
-canvas,video{width:100%;background:#05080e;border-radius:10px;margin-top:10px}
-.plan{border:1px solid #38577c;border-radius:12px;padding:14px;margin:10px 0;background:#101a2c}
-.price{font-size:25px;color:#71caff;font-weight:bold}
-.small{font-size:12px;color:#aabbd1}
-.stat{font-size:24px;color:#76d5ff;font-weight:bold}
-.hidden{display:none!important}
-.status{color:#8fe2a6}
+:root{--bg:#080d18;--panel:#111a2b;--panel2:#172238;--text:#f4f7ff;--muted:#9eabc3;--accent:#8b5cf6;--accent2:#22d3ee;--line:#283650;--good:#34d399;--bad:#fb7185}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at top,#172342 0,#080d18 48%);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+header{position:sticky;top:0;z-index:5;background:#080d18ed;border-bottom:1px solid var(--line);padding:13px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.brand{font-weight:900;letter-spacing:1.5px;font-size:20px}.brand span{color:var(--accent2)}
+button,.btn{border:0;border-radius:12px;padding:11px 15px;background:linear-gradient(120deg,var(--accent),#5b7cfa);color:white;font-weight:700;cursor:pointer}
+button.secondary{background:#26334b}button:disabled{opacity:.45;cursor:not-allowed}
+nav{display:flex;gap:7px;overflow:auto;padding:12px;max-width:1100px;margin:auto}
+nav button{white-space:nowrap;background:#18243a;border:1px solid var(--line);padding:9px 12px}
+nav button.active{background:var(--accent)}
+main{max-width:1100px;margin:auto;padding:12px}
+.panel{background:linear-gradient(145deg,#121d31,#0e1728);border:1px solid var(--line);border-radius:18px;padding:18px;margin:12px 0;box-shadow:0 12px 35px #0003}
+h1{font-size:clamp(27px,6vw,44px);margin:8px 0}h2{margin:0 0 13px;font-size:21px}h3{margin:5px 0 10px}
+p,.muted{color:var(--muted);line-height:1.55}.hero{padding:25px 18px;text-align:center;background:linear-gradient(135deg,#25164c,#102d43);border:1px solid #57458c}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.card{background:#111d30;border:1px solid var(--line);border-radius:15px;padding:15px}
+input,select,textarea{width:100%;padding:12px;margin:6px 0 12px;border-radius:10px;border:1px solid #35445f;background:#0a1322;color:white;font:inherit}
+label{font-size:14px;color:#c6d2e7}video,canvas,img.preview{max-width:100%;width:100%;border-radius:12px;background:#05080e}
+.row{display:flex;gap:9px;flex-wrap:wrap;align-items:center}.row>*{flex:1}
+.hidden{display:none!important}.price{font-size:28px;font-weight:900;color:#a5f3fc}.tag{display:inline-block;background:#273653;padding:5px 9px;border-radius:20px;font-size:12px}
+.notice{padding:12px;border-radius:10px;background:#1c2a40;color:#c9d7ef;border:1px solid #35445f}
+.good{color:var(--good)}.bad{color:var(--bad)}.stat{font-size:26px;font-weight:900}
+footer{text-align:center;color:var(--muted);padding:25px}
+.small{font-size:12px;color:var(--muted)}.toolrow{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+@media(min-width:700px){main{padding:20px}.hero{padding:42px}}
 </style>
 </head>
-
 <body>
 <header>
-<h1>VYORA STUDIO</h1>
-<p>Photo • Video • Premium Studio</p>
+  <div class="brand">VYORA <span>STUDIO</span></div>
+  <button class="secondary" id="installBtn" hidden>Install App</button>
 </header>
-
-<nav>
-<button onclick="showPage('photo')">Photo Editor</button>
-<button onclick="showPage('video')">Video Editor</button>
-<button onclick="showPage('premium')">Premium</button>
-<button onclick="showPage('admin')">Admin Center</button>
+<nav id="tabs">
+  <button class="active" data-page="home">Home</button>
+  <button data-page="photo">Photo Editor</button>
+  <button data-page="video">Video Editor</button>
+  <button data-page="premium">Premium</button>
+  <button data-page="account">Account</button>
+  <button data-page="admin">Admin</button>
 </nav>
-
 <main>
-
-<!-- PHOTO EDITOR -->
-<section id="photo" class="page active">
-<h2>Photo Editor</h2>
-<div class="card">
-<label>मोबाइल से फोटो चुनें</label>
-<input type="file" id="photoFile" accept="image/*">
-<canvas id="photoCanvas" width="1080" height="1080"></canvas>
-
-<label>Brightness</label>
-<input type="range" id="brightness" min="0" max="200" value="100">
-
-<label>Contrast</label>
-<input type="range" id="contrast" min="0" max="200" value="100">
-
-<label>Saturation</label>
-<input type="range" id="saturation" min="0" max="200" value="100">
-
-<label>Zoom</label>
-<input type="range" id="zoom" min="50" max="150" value="100">
-
-<label>Filter</label>
-<select id="filter">
-<option value="none">Normal</option>
-<option value="grayscale(100%)">Black & White</option>
-<option value="sepia(70%)">Sepia</option>
-<option value="contrast(120%) saturate(130%)">Vivid</option>
-<option value="brightness(110%) saturate(120%)">Bright</option>
-<option value="saturate(160%)">Colorful</option>
-<option value="grayscale(40%) contrast(120%)">Cinematic</option>
-</select>
-
-<button onclick="rotatePhoto()">Rotate</button>
-<button onclick="resetPhoto()">Reset</button>
-<button onclick="downloadPhoto()">Download HD Photo</button>
-<p class="small">नोट: HD export का आकार 1080 × 1080 pixels है।</p>
-</div>
+<section id="home" class="page">
+  <div class="panel hero">
+    <span class="tag">CREATIVE EDITING PLATFORM</span>
+    <h1>VYORA STUDIO</h1>
+    <p>आपकी फोटो और वीडियो एडिटिंग का अपना स्टूडियो।</p>
+    <div class="row">
+      <button onclick="showPage('photo')">Photo Editor खोलें</button>
+      <button class="secondary" onclick="showPage('video')">Video Editor खोलें</button>
+    </div>
+  </div>
+  <div class="grid">
+    <div class="card"><h3>📸 Photo Editor</h3><p>फोटो चुनें, फिल्टर लगाएं और सेव करें।</p></div>
+    <div class="card"><h3>🎬 Video Editor</h3><p>वीडियो चुनें, प्रीव्यू देखें और उपलब्ध ब्राउज़र विकल्पों का उपयोग करें।</p></div>
+    <div class="card"><h3>⭐ Premium</h3><p>अपनी जरूरत के अनुसार सदस्यता प्लान देखें।</p></div>
+  </div>
 </section>
 
-<!-- VIDEO EDITOR -->
-<section id="video" class="page">
-<h2>Video Editor</h2>
-<div class="card">
-<label>मोबाइल से वीडियो चुनें</label>
-<input type="file" id="videoFile" accept="video/*">
-<video id="videoPreview" controls playsinline></video>
-
-<label>नया गाना चुनें</label>
-<input type="file" id="audioFile" accept="audio/*">
-<audio id="audioPreview" controls></audio>
-
-<label>गाने की आवाज़</label>
-<input type="range" id="audioVolume" min="0" max="100" value="70">
-
-<label>गाने का Start Time (सेकंड)</label>
-<input type="number" id="audioStart" min="0" value="0">
-
-<button onclick="playMusic()">गाना चलाएँ</button>
-<button onclick="pauseMusic()">गाना रोकें</button>
-<p class="small">यहाँ वीडियो और गाने का अलग-अलग Preview उपलब्ध है। अभी दोनों को मिलाकर नई वीडियो फ़ाइल Export करने की सुविधा नहीं जुड़ी है।</p>
-</div>
+<section id="photo" class="page hidden">
+  <div class="panel">
+    <h2>📸 Photo Editor</h2>
+    <label>मोबाइल से फोटो चुनें</label><input id="photoInput" type="file" accept="image/*">
+    <canvas id="photoCanvas"></canvas>
+    <label>फिल्टर</label>
+    <select id="filter">
+      <option value="none">Original</option><option value="grayscale(1)">Black & White</option>
+      <option value="sepia(1)">Sepia</option><option value="contrast(1.35)">Contrast</option>
+      <option value="brightness(1.2)">Bright</option><option value="saturate(1.7)">Vibrant</option>
+      <option value="grayscale(.5) contrast(1.2)">Cinematic</option>
+    </select>
+    <label>Brightness</label><input id="brightness" type="range" min="50" max="150" value="100">
+    <label>Contrast</label><input id="contrast" type="range" min="50" max="160" value="100">
+    <label>Text overlay</label><input id="photoText" placeholder="फोटो पर टेक्स्ट (वैकल्पिक)">
+    <div class="toolrow">
+      <button id="rotateBtn" class="secondary">Rotate</button>
+      <button id="downloadPhoto">HD फोटो सेव करें</button>
+    </div>
+    <p class="small">एडिटिंग आपके डिवाइस के ब्राउज़र में होती है। बड़ी फोटो पर प्रोसेसिंग में समय लग सकता है।</p>
+  </div>
 </section>
 
-<!-- PREMIUM -->
-<section id="premium" class="page">
-<h2>VYORA Premium</h2>
-<p>अपनी पसंद का Premium Plan चुनें।</p>
-
-<div class="plan">
-<h3>1 Month</h3>
-<div class="price">₹99</div>
-<button onclick="selectPremium('1 Month','99')">Plan चुनें</button>
-</div>
-
-<div class="plan">
-<h3>3 Months</h3>
-<div class="price">₹249</div>
-<button onclick="selectPremium('3 Months','249')">Plan चुनें</button>
-</div>
-
-<div class="plan">
-<h3>6 Months</h3>
-<div class="price">₹399</div>
-<button onclick="selectPremium('6 Months','399')">Plan चुनें</button>
-</div>
-
-<div class="plan">
-<h3>12 Months</h3>
-<div class="price">₹699</div>
-<button onclick="selectPremium('12 Months','699')">Plan चुनें</button>
-</div>
-
-<div class="card" id="premiumMessage">
-Premium Plan चुनने पर उसकी जानकारी यहाँ दिखेगी।
-<p class="small">अभी Payment Gateway जुड़ा नहीं है। Plan चुनने से भुगतान या सदस्यता अपने आप सक्रिय नहीं होगी।</p>
-</div>
+<section id="video" class="page hidden">
+  <div class="panel">
+    <h2>🎬 Video Editor</h2>
+    <label>मोबाइल से वीडियो चुनें</label><input id="videoInput" type="file" accept="video/*">
+    <video id="videoPreview" controls playsinline></video>
+    <label>मोबाइल से ऑडियो चुनें</label><input id="audioInput" type="file" accept="audio/*">
+    <audio id="audioPreview" controls></audio>
+    <div class="notice">यह संस्करण वीडियो और ऑडियो का प्रीव्यू देता है। वीडियो में नया गाना मिलाकर HD फाइल एक्सपोर्ट करने के लिए अलग वीडियो-प्रोसेसिंग इंजन/सर्वर जोड़ना होगा। अभी कोई नकली Export बटन नहीं दिया गया है।</div>
+  </div>
 </section>
 
-<!-- ADMIN -->
-<section id="admin" class="page">
-<h2>Admin Center</h2>
-
-<div class="card" id="loginBox">
-<h3>Admin Login</h3>
-<input type="email" id="adminEmail" placeholder="Admin Email">
-<input type="password" id="adminPassword" placeholder="Admin Password">
-<button onclick="adminLogin()">Login</button>
-<p id="loginMessage"></p>
-</div>
-
-<div id="adminPanel" class="hidden">
-<div class="card">
-<h3>Admin Dashboard</h3>
-<p class="status">Admin Access Verified</p>
-<button onclick="loadAdminData()">Refresh Data</button>
-<button onclick="adminLogout()">Logout</button>
-</div>
-
-<div class="card">
-<h3>Admin Wallet</h3>
-<div class="stat" id="walletBalance">₹0.00</div>
-<p id="walletCurrency">Currency: INR</p>
-<p class="small">यह Wallet केवल Admin को दिखाई देता है। Balance डेटाबेस से पढ़ा जाता है।</p>
-</div>
-
-<div class="card">
-<h3>Monetization Dashboard</h3>
-<p>कुल Verified Credits</p>
-<div class="stat" id="totalEarnings">₹0.00</div>
-</div>
-
-<div class="card">
-<h3>Premium Earnings</h3>
-<div class="stat" id="premiumEarnings">₹0.00</div>
-</div>
-
-<div class="card">
-<h3>Ads Earnings</h3>
-<div class="stat" id="adsEarnings">₹0.00</div>
-</div>
-
-<div class="card">
-<h3>Transaction History</h3>
-<div id="transactionList">कोई Transaction उपलब्ध नहीं है।</div>
-</div>
-</div>
+<section id="premium" class="page hidden">
+  <div class="panel">
+    <h2>⭐ VYORA Premium Plans</h2>
+    <p>नीचे सदस्यता की तय कीमतें दिखाई गई हैं। भुगतान तभी सक्रिय होगा जब सुरक्षित Payment Gateway Backend जोड़ा जाएगा।</p>
+    <div class="grid">
+      <div class="card"><h3>1 महीना</h3><div class="price">₹99</div><button onclick="requestPlan('1 महीना',99)">यह प्लान चुनें</button></div>
+      <div class="card"><h3>3 महीने</h3><div class="price">₹249</div><button onclick="requestPlan('3 महीने',249)">यह प्लान चुनें</button></div>
+      <div class="card"><h3>6 महीने</h3><div class="price">₹399</div><button onclick="requestPlan('6 महीने',399)">यह प्लान चुनें</button></div>
+      <div class="card"><h3>12 महीने</h3><div class="price">₹699</div><button onclick="requestPlan('12 महीने',699)">यह प्लान चुनें</button></div>
+    </div>
+    <p id="planMessage" class="notice">Payment Gateway अभी कॉन्फ़िगर नहीं है। प्लान चुनने पर कोई पैसा नहीं कटेगा।</p>
+  </div>
 </section>
 
+<section id="account" class="page hidden">
+  <div class="panel">
+    <h2>Account</h2>
+    <div id="accountStatus" class="notice">Supabase कनेक्शन कॉन्फ़िगर होने पर लॉगिन उपलब्ध होगा।</div>
+    <label>Email</label><input id="email" type="email" autocomplete="email" placeholder="आपका ईमेल">
+    <label>Password</label><input id="password" type="password" autocomplete="current-password" placeholder="पासवर्ड">
+    <div class="row"><button id="loginBtn">Login</button><button id="signupBtn" class="secondary">Sign up</button></div>
+    <button id="logoutBtn" class="secondary hidden">Logout</button>
+  </div>
+</section>
+
+<section id="admin" class="page hidden">
+  <div class="panel">
+    <h2>🔐 Admin Center</h2>
+    <div class="notice">Admin पैनल केवल Supabase में admin role वाले authenticated account के लिए खुलना चाहिए। केवल फ्रंटएंड छिपाना सुरक्षा नहीं है; नीचे दिए गए SQL में RLS लागू करना जरूरी है।</div>
+    <div id="adminStatus" class="notice">पहले Supabase URL और anon key सेट करें और Admin account से Login करें।</div>
+    <div id="adminContent" class="hidden">
+      <div class="grid">
+        <div class="card"><p>Admin Wallet</p><div class="stat" id="walletValue">₹0.00</div></div>
+        <div class="card"><p>Monetization Records</p><div class="stat" id="earningCount">0</div></div>
+      </div>
+      <h3>कमाई रिकॉर्ड</h3><div id="earningRows" class="notice">अभी कोई रिकॉर्ड नहीं।</div>
+      <h3>Wallet transactions</h3><div id="walletRows" class="notice">अभी कोई लेनदेन नहीं।</div>
+      <p class="small">यह डेटा केवल authenticated admin role को RLS के जरिए उपलब्ध होना चाहिए।</p>
+    </div>
+  </div>
+</section>
 </main>
+<footer>© <span id="year"></span> VYORA STUDIO · Made for creators</footer>
 
+<!-- Supabase browser SDK -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-const SUPABASE_URL = "https://gsruwrzwrresxhmhrypf.supabase.co";
-const SUPABASE_KEY = "sb_publishable_wNrnIupEj4tjYYcSjaW93A_d_NSOhoK";
-const ADMIN_UID = "08aab84d-b09d-4514-ad80-c35c24a5a248";
+/*
+  SETUP:
+  1) Supabase Dashboard > Project Settings > API से Project URL और anon/publishable key लें।
+  2) नीचे SUPABASE_URL और SUPABASE_ANON_KEY भरें।
+  3) कभी भी service_role key इस फाइल में न डालें।
+  4) दिए गए SQL को Supabase SQL Editor में चलाएं।
+*/
+const SUPABASE_URL = "PASTE_YOUR_SUPABASE_PROJECT_URL";
+const SUPABASE_ANON_KEY = "PASTE_YOUR_SUPABASE_ANON_KEY";
+let supabaseClient = null;
+let currentUser = null;
+let deferredInstallPrompt = null;
 
-const db = window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
-
+document.getElementById('year').textContent = new Date().getFullYear();
 function showPage(id){
- document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
- document.getElementById(id).classList.add("active");
+  document.querySelectorAll('.page').forEach(p=>p.classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden');
+  document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('active',b.dataset.page===id));
+  if(id==='admin') refreshAdmin();
 }
+document.querySelectorAll('#tabs button').forEach(b=>b.addEventListener('click',()=>showPage(b.dataset.page)));
 
-function selectPremium(plan,price){
- document.getElementById("premiumMessage").innerHTML =
- "<h3>आपका चुना हुआ Plan</h3><p>"+plan+"</p><div class='price'>₹"+price+
- "</div><p>Payment Gateway जुड़ने के बाद भुगतान कर सकेंगे। अभी कोई भुगतान नहीं हुआ है।</p>";
+function setStatus(id,msg,isGood=false){
+  const el=document.getElementById(id); if(el){el.textContent=msg;el.className='notice '+(isGood?'good':'');}
 }
-
-/* PHOTO EDITOR */
-const canvas=document.getElementById("photoCanvas");
-const ctx=canvas.getContext("2d");
-let photoImage=new Image();
-let photoLoaded=false;
-let rotation=0;
-
-function drawPhoto(){
- if(!photoLoaded)return;
- ctx.clearRect(0,0,1080,1080);
- ctx.save();
- ctx.translate(540,540);
- ctx.rotate(rotation*Math.PI/180);
- let z=Number(document.getElementById("zoom").value)/100;
- let w=1080*z,h=1080*z;
- let scale=Math.max(w/photoImage.width,h/photoImage.height);
- w=photoImage.width*scale;
- h=photoImage.height*scale;
- w*=z; h*=z;
- ctx.filter=
- "brightness("+document.getElementById("brightness").value+"%) "+
- "contrast("+document.getElementById("contrast").value+"%) "+
- "saturate("+document.getElementById("saturation").value+"%) "+
- document.getElementById("filter").value;
- ctx.drawImage(photoImage,-w/2,-h/2,w,h);
- ctx.restore();
- ctx.filter="none";
+function configured(){
+  return SUPABASE_URL.startsWith('https://') &&
+    !SUPABASE_URL.includes('PASTE_') &&
+    SUPABASE_ANON_KEY.length>20 &&
+    !SUPABASE_ANON_KEY.includes('PASTE_');
 }
-
-document.getElementById("photoFile").addEventListener("change",e=>{
- const file=e.target.files[0];
- if(!file)return;
- const url=URL.createObjectURL(file);
- photoImage.onload=()=>{
-  photoLoaded=true;
-  rotation=0;
-  drawPhoto();
-  URL.revokeObjectURL(url);
- };
- photoImage.src=url;
-});
-
-["brightness","contrast","saturation","zoom","filter"].forEach(id=>{
- document.getElementById(id).addEventListener("input",drawPhoto);
-});
-
-function rotatePhoto(){rotation=(rotation+90)%360;drawPhoto()}
-function resetPhoto(){
- ["brightness","contrast","saturation","zoom"].forEach(id=>{
-  document.getElementById(id).value=id==="zoom"?100:100;
- });
- document.getElementById("filter").value="none";
- rotation=0;
- drawPhoto();
-}
-function downloadPhoto(){
- if(!photoLoaded){alert("पहले फोटो चुनें");return}
- const link=document.createElement("a");
- link.download="VYORA-HD-Photo.jpg";
- link.href=canvas.toDataURL("image/jpeg",0.95);
- link.click();
-}
-
-/* VIDEO PREVIEW */
-let videoURL=null,audioURL=null;
-const video=document.getElementById("videoPreview");
-const audio=document.getElementById("audioPreview");
-
-document.getElementById("videoFile").addEventListener("change",e=>{
- if(videoURL)URL.revokeObjectURL(videoURL);
- if(e.target.files[0]){
-  videoURL=URL.createObjectURL(e.target.files[0]);
-  video.src=videoURL;
- }
-});
-
-document.getElementById("audioFile").addEventListener("change",e=>{
- if(audioURL)URL.revokeObjectURL(audioURL);
- if(e.target.files[0]){
-  audioURL=URL.createObjectURL(e.target.files[0]);
-  audio.src=audioURL;
- }
-});
-
-document.getElementById("audioVolume").addEventListener("input",e=>{
- audio.volume=Number(e.target.value)/100;
-});
-
-function playMusic(){
- if(!audio.src){alert("पहले गाना चुनें");return}
- audio.currentTime=Math.max(0,Number(document.getElementById("audioStart").value)||0);
- audio.play();
-}
-function pauseMusic(){audio.pause()}
-
-/* ADMIN AUTH */
-async function adminLogin(){
- const email=document.getElementById("adminEmail").value.trim();
- const password=document.getElementById("adminPassword").value;
- const message=document.getElementById("loginMessage");
- message.textContent="Login हो रहा है...";
-
- const {data,error}=await db.auth.signInWithPassword({email,password});
- if(error){
-  message.textContent="Login Error: "+error.message;
-  return;
- }
- if(!data.user || data.user.id!==ADMIN_UID){
-  await db.auth.signOut();
-  message.textContent="यह Admin Account नहीं है।";
-  return;
- }
- message.textContent="Login सफल!";
- await checkAdmin();
-}
-
-async function checkAdmin(){
- const {data}=await db.auth.getUser();
- if(data.user && data.user.id===ADMIN_UID){
-  document.getElementById("loginBox").classList.add("hidden");
-  document.getElementById("adminPanel").classList.remove("hidden");
-  await loadAdminData();
- }else{
-  document.getElementById("loginBox").classList.remove("hidden");
-  document.getElementById("adminPanel").classList.add("hidden");
- }
-}
-
-async function adminLogout(){
- await db.auth.signOut();
- document.getElementById("adminPassword").value="";
- checkAdmin();
-}
-
-/* ADMIN WALLET AND MONETIZATION */
-async function loadAdminData(){
- const {data:userData}=await db.auth.getUser();
- if(!userData.user || userData.user.id!==ADMIN_UID){
-  await checkAdmin();
-  return;
- }
-
- const userId=userData.user.id;
-
- const {data:wallet,error:walletError}=await db
-  .from("vyora_wallet")
-  .select("id,balance,currency")
-  .eq("owner_id",userId)
-  .maybeSingle();
-
- if(walletError){
-  document.getElementById("walletBalance").textContent="Wallet Error";
-  console.error(walletError);
- }else if(wallet){
-  document.getElementById("walletBalance").textContent=
-   "₹"+Number(wallet.balance||0).toFixed(2);
-  document.getElementById("walletCurrency").textContent=
-   "Currency: "+(wallet.currency||"INR");
- }else{
-  document.getElementById("walletBalance").textContent="₹0.00";
- }
-
- const {data:transactions,error}=await db
-  .from("vyora_transactions")
-  .select("transaction_type,amount,description,created_at")
-  .eq("owner_id",userId)
-  .order("created_at",{ascending:false});
-
- if(error){
-  document.getElementById("transactionList").textContent=
-   "Transaction Error: "+error.message;
-  return;
- }
-
- let total=0,premium=0,ads=0;
- const list=document.getElementById("transactionList");
- list.innerHTML="";
-
- if(!transactions || transactions.length===0){
-  list.textContent="अभी कोई Transaction नहीं है।";
- }else{
-  transactions.forEach(t=>{
-   const amount=Number(t.amount)||0;
-   const isCredit=t.transaction_type==="credit";
-   if(isCredit){
-    total+=amount;
-    const desc=(t.description||"").toUpperCase();
-    if(desc.startsWith("PREMIUM:"))premium+=amount;
-    if(desc.startsWith("ADS:"))ads+=amount;
-   }
-   const item=document.createElement("div");
-   item.className="plan";
-   const date=t.created_at?new Date(t.created_at).toLocaleString("hi-IN"):"";
-   item.textContent=
-    (isCredit?"+":"-")+" ₹"+amount.toFixed(2)+
-    " | "+(t.description||"Transaction")+
-    " | "+date;
-   list.appendChild(item);
+if(configured() && window.supabase){
+  supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+  supabaseClient.auth.getSession().then(({data})=>{
+    currentUser=data.session?.user||null; updateAccountUI();
   });
- }
-
- document.getElementById("totalEarnings").textContent="₹"+total.toFixed(2);
- document.getElementById("premiumEarnings").textContent="₹"+premium.toFixed(2);
- document.getElementById("adsEarnings").textContent="₹"+ads.toFixed(2);
+  supabaseClient.auth.onAuthStateChange((_event,session)=>{
+    currentUser=session?.user||null; updateAccountUI();
+  });
+}else{
+  setStatus('accountStatus','Supabase सेटअप बाकी है। पहले इस फाइल में Project URL और anon key भरें।');
+}
+function updateAccountUI(){
+  setStatus('accountStatus',currentUser?'लॉगिन: '+currentUser.email:'आप लॉगिन नहीं हैं।',!!currentUser);
+  document.getElementById('logoutBtn').classList.toggle('hidden',!currentUser);
+}
+document.getElementById('loginBtn').onclick=async()=>{
+  if(!supabaseClient)return alert('पहले Supabase URL और anon key सेट करें।');
+  const email=document.getElementById('email').value.trim(),password=document.getElementById('password').value;
+  if(!email||!password)return alert('Email और password भरें।');
+  const {error}=await supabaseClient.auth.signInWithPassword({email,password});
+  if(error)alert(error.message);
+};
+document.getElementById('signupBtn').onclick=async()=>{
+  if(!supabaseClient)return alert('पहले Supabase सेटअप करें।');
+  const email=document.getElementById('email').value.trim(),password=document.getElementById('password').value;
+  if(!email||password.length<8)return alert('Email भरें और कम से कम 8 अक्षर का password रखें।');
+  const {error}=await supabaseClient.auth.signUp({email,password});
+  alert(error?error.message:'Signup request भेज दी गई। Email verification की जरूरत हो सकती है।');
+};
+document.getElementById('logoutBtn').onclick=async()=>{
+  if(supabaseClient){const {error}=await supabaseClient.auth.signOut();if(error)alert(error.message);}
+};
+function requestPlan(name,amount){
+  document.getElementById('planMessage').textContent=`आपने ${name} का ₹${amount} प्लान चुना है। Payment Gateway अभी सक्रिय नहीं है; कोई भुगतान नहीं हुआ।`;
 }
 
-checkAdmin();
+let photoImage=null,rotation=0;
+const canvas=document.getElementById('photoCanvas'),ctx=canvas.getContext('2d');
+function drawPhoto(){
+  if(!photoImage)return;
+  const w=photoImage.naturalWidth,h=photoImage.naturalHeight;
+  const sideways=Math.abs(rotation%180)===90;
+  canvas.width=sideways?h:w;canvas.height=sideways?w:h;
+  ctx.save();ctx.translate(canvas.width/2,canvas.height/2);ctx.rotate(rotation*Math.PI/180);
+  ctx.filter=`${document.getElementById('filter').value} brightness(${document.getElementById('brightness').value}%) contrast(${document.getElementById('contrast').value}%)`;
+  ctx.drawImage(photoImage,-w/2,-h/2,w,h);ctx.restore();ctx.filter='none';
+  const t=document.getElementById('photoText').value;
+  if(t){ctx.font=`bold ${Math.max(24,canvas.width*.05)}px sans-serif`;ctx.textAlign='center';ctx.lineWidth=3;ctx.strokeStyle='#000';ctx.fillStyle='#fff';ctx.strokeText(t,canvas.width/2,canvas.height-35);ctx.fillText(t,canvas.width/2,canvas.height-35);}
+}
+document.getElementById('photoInput').onchange=e=>{
+  const file=e.target.files[0];if(!file)return;
+  const url=URL.createObjectURL(file);photoImage=new Image();
+  photoImage.onload=()=>{rotation=0;drawPhoto();URL.revokeObjectURL(url);};photoImage.src=url;
+};
+['filter','brightness','contrast','photoText'].forEach(id=>document.getElementById(id).addEventListener(id==='photoText'?'input':'change',drawPhoto));
+document.getElementById('rotateBtn').onclick=()=>{rotation=(rotation+90)%360;drawPhoto();};
+document.getElementById('downloadPhoto').onclick=()=>{
+  if(!photoImage)return alert('पहले फोटो चुनें।');
+  const a=document.createElement('a');a.download='vyora-edited-photo.png';a.href=canvas.toDataURL('image/png');a.click();
+};
+let videoUrl=null,audioUrl=null;
+document.getElementById('videoInput').onchange=e=>{
+  const f=e.target.files[0];if(!f)return;
+  if(videoUrl)URL.revokeObjectURL(videoUrl);videoUrl=URL.createObjectURL(f);
+  document.getElementById('videoPreview').src=videoUrl;
+};
+document.getElementById('audioInput').onchange=e=>{
+  const f=e.target.files[0];if(!f)return;
+  if(audioUrl)URL.revokeObjectURL(audioUrl);audioUrl=URL.createObjectURL(f);
+  document.getElementById('audioPreview').src=audioUrl;
+};
+
+async function isAdmin(){
+  if(!supabaseClient||!currentUser)return false;
+  const {data,error}=await supabaseClient.rpc('is_vyora_admin');
+  if(error){console.error(error);return false;}
+  return data===true;
+}
+async function refreshAdmin(){
+  const content=document.getElementById('adminContent');
+  content.classList.add('hidden');
+  if(!supabaseClient||!currentUser){
+    setStatus('adminStatus','Admin देखने के लिए Supabase account से Login करें।');return;
+  }
+  const allowed=await isAdmin();
+  if(!allowed){setStatus('adminStatus','Access denied: यह account Admin role में नहीं है।');return;}
+  setStatus('adminStatus','Admin Access Verified',true);
+  content.classList.remove('hidden');
+  const [{data:wallet,error:wErr},{data:earnings,error:eErr}]=await Promise.all([
+    supabaseClient.from('vyora_wallet').select('balance').eq('owner_id',currentUser.id).maybeSingle(),
+    supabaseClient.from('vyora_earnings').select('id,source,amount,created_at').order('created_at',{ascending:false}).limit(50)
+  ]);
+  if(wErr||eErr){setStatus('adminStatus','डेटा पढ़ने में समस्या: '+(wErr?.message||eErr?.message));return;}
+  document.getElementById('walletValue').textContent='₹'+Number(wallet?.balance||0).toFixed(2);
+  document.getElementById('earningCount').textContent=String(earnings?.length||0);
+  document.getElementById('earningRows').textContent=earnings?.length?earnings.map(x=>`${x.source} — ₹${Number(x.amount).toFixed(2)} — ${new Date(x.created_at).toLocaleString('hi-IN')}`).join('\n'):'अभी कोई रिकॉर्ड नहीं।';
+  const {data:tx,error:tErr}=await supabaseClient.from('vyora_wallet_transactions').select('kind,amount,note,created_at').order('created_at',{ascending:false}).limit(50);
+  document.getElementById('walletRows').textContent=tErr?'Transactions पढ़ने में समस्या':(tx?.length?tx.map(x=>`${x.kind} — ₹${Number(x.amount).toFixed(2)} — ${x.note||''}`).join('\n'):'अभी कोई लेनदेन नहीं।');
+}
+if('serviceWorker' in navigator && location.protocol.startsWith('http')){
+  window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js').catch(console.warn));
+}
+window.addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault();deferredInstallPrompt=e;document.getElementById('installBtn').hidden=false;
+});
+document.getElementById('installBtn').onclick=async()=>{
+  if(!deferredInstallPrompt)return;
+  deferredInstallPrompt.prompt();await deferredInstallPrompt.userChoice;
+  deferredInstallPrompt=null;document.getElementById('installBtn').hidden=true;
+};
 </script>
 </body>
 </html>
